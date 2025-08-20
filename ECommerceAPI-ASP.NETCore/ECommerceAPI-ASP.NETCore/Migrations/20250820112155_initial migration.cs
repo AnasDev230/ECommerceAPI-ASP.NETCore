@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ECommerceAPI_ASP.NETCore.Migrations
 {
     /// <inheritdoc />
-    public partial class InitalMigration : Migration
+    public partial class initialmigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -50,6 +50,25 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UrlHandle = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ParentCategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Categories_Categories_ParentCategoryId",
+                        column: x => x.ParentCategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -168,6 +187,19 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                     { "e7233f4e-8897-499a-9f5f-fbaf10e35dcf", "e7233f4e-8897-499a-9f5f-fbaf10e35dcf", "Admin", "ADMIN" }
                 });
 
+            migrationBuilder.InsertData(
+                table: "Categories",
+                columns: new[] { "Id", "Name", "ParentCategoryId", "UrlHandle" },
+                values: new object[,]
+                {
+                    { new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"), "Fashion", null, "fashion" },
+                    { new Guid("f540b581-4a35-428d-a65e-1578280a942e"), "Electronics", null, "electronics" },
+                    { new Guid("2132fa49-7d53-4f6b-bade-4a4f6ba4a087"), "Mobiles", new Guid("f540b581-4a35-428d-a65e-1578280a942e"), "mobiles" },
+                    { new Guid("4dab995e-217a-469a-9940-6ef1105b2570"), "Women's Clothing", new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"), "womens-clothing" },
+                    { new Guid("b423508e-1198-4198-aff9-b03ae883b654"), "Laptops", new Guid("f540b581-4a35-428d-a65e-1578280a942e"), "laptops" },
+                    { new Guid("b8c63cd4-22b2-4ca5-8ebd-dd4e3ef3ba83"), "Men's Clothing", new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"), "mens-clothing" }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -206,6 +238,11 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Categories_ParentCategoryId",
+                table: "Categories",
+                column: "ParentCategoryId");
         }
 
         /// <inheritdoc />
@@ -225,6 +262,9 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

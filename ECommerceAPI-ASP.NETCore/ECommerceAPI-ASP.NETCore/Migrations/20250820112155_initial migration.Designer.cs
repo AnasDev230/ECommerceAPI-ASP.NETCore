@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceAPI_ASP.NETCore.Migrations
 {
     [DbContext(typeof(EcommerceDBContext))]
-    [Migration("20250819162705_Inital-Migration")]
-    partial class InitalMigration
+    [Migration("20250820112155_initial migration")]
+    partial class initialmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,72 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ParentCategoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UrlHandle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentCategoryId");
+
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("f540b581-4a35-428d-a65e-1578280a942e"),
+                            Name = "Electronics",
+                            UrlHandle = "electronics"
+                        },
+                        new
+                        {
+                            Id = new Guid("2132fa49-7d53-4f6b-bade-4a4f6ba4a087"),
+                            Name = "Mobiles",
+                            ParentCategoryId = new Guid("f540b581-4a35-428d-a65e-1578280a942e"),
+                            UrlHandle = "mobiles"
+                        },
+                        new
+                        {
+                            Id = new Guid("b423508e-1198-4198-aff9-b03ae883b654"),
+                            Name = "Laptops",
+                            ParentCategoryId = new Guid("f540b581-4a35-428d-a65e-1578280a942e"),
+                            UrlHandle = "laptops"
+                        },
+                        new
+                        {
+                            Id = new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"),
+                            Name = "Fashion",
+                            UrlHandle = "fashion"
+                        },
+                        new
+                        {
+                            Id = new Guid("b8c63cd4-22b2-4ca5-8ebd-dd4e3ef3ba83"),
+                            Name = "Men's Clothing",
+                            ParentCategoryId = new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"),
+                            UrlHandle = "mens-clothing"
+                        },
+                        new
+                        {
+                            Id = new Guid("4dab995e-217a-469a-9940-6ef1105b2570"),
+                            Name = "Women's Clothing",
+                            ParentCategoryId = new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"),
+                            UrlHandle = "womens-clothing"
+                        });
+                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -246,6 +312,15 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Category", b =>
+                {
+                    b.HasOne("ECommerceAPI_ASP.NETCore.Models.Domain.Category", "ParentCategory")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("ParentCategoryId");
+
+                    b.Navigation("ParentCategory");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -295,6 +370,11 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Category", b =>
+                {
+                    b.Navigation("SubCategories");
                 });
 #pragma warning restore 612, 618
         }

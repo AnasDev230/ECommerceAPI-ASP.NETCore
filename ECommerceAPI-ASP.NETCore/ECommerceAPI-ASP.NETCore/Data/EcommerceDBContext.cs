@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using ECommerceAPI_ASP.NETCore.Models.Domain;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +11,7 @@ namespace ECommerceAPI_ASP.NETCore.Data
         {
             
         }
-
+        public DbSet<Category> Categories { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -45,6 +46,28 @@ namespace ECommerceAPI_ASP.NETCore.Data
     };
 
             modelBuilder.Entity<IdentityRole>().HasData(roles);
+
+            modelBuilder.Entity<Category>()
+            .HasOne(c => c.ParentCategory)
+            .WithMany(c => c.SubCategories)
+            .HasForeignKey(c => c.ParentCategoryId);
+
+            
+            var electronicsId = Guid.NewGuid();
+            var fashionId = Guid.NewGuid();
+            var mobilesId = Guid.NewGuid();
+            var laptopsId = Guid.NewGuid();
+            var menClothingId = Guid.NewGuid();
+            var womenClothingId = Guid.NewGuid();
+
+            modelBuilder.Entity<Category>().HasData(
+                new Category { Id = electronicsId, Name = "Electronics", UrlHandle = "electronics", ParentCategoryId = null },
+                new Category { Id = mobilesId, Name = "Mobiles", UrlHandle = "mobiles", ParentCategoryId = electronicsId },
+                new Category { Id = laptopsId, Name = "Laptops", UrlHandle = "laptops", ParentCategoryId = electronicsId },
+                new Category { Id = fashionId, Name = "Fashion", UrlHandle = "fashion", ParentCategoryId = null },
+                new Category { Id = menClothingId, Name = "Men's Clothing", UrlHandle = "mens-clothing", ParentCategoryId = fashionId },
+                new Category { Id = womenClothingId, Name = "Women's Clothing", UrlHandle = "womens-clothing", ParentCategoryId = fashionId }
+            );
         }
 
 
