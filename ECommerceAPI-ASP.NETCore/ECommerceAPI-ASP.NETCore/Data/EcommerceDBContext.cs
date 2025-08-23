@@ -1,17 +1,20 @@
-﻿using ECommerceAPI_ASP.NETCore.Models.Domain;
+﻿using System.Reflection.Emit;
+using ECommerceAPI_ASP.NETCore.Models.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ECommerceAPI_ASP.NETCore.Data
 {
-    public class EcommerceDBContext:IdentityDbContext<IdentityUser>
+    public class EcommerceDBContext : IdentityDbContext<IdentityUser>
     {
-        public EcommerceDBContext(DbContextOptions<EcommerceDBContext> dbContextOptions):base(dbContextOptions)
+        public EcommerceDBContext(DbContextOptions<EcommerceDBContext> dbContextOptions) : base(dbContextOptions)
         {
-            
+
         }
         public DbSet<Category> Categories { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Stock> Stocks { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -52,7 +55,7 @@ namespace ECommerceAPI_ASP.NETCore.Data
             .WithMany(c => c.SubCategories)
             .HasForeignKey(c => c.ParentCategoryId);
 
-            
+
             var electronicsId = Guid.NewGuid();
             var fashionId = Guid.NewGuid();
             var mobilesId = Guid.NewGuid();
@@ -68,10 +71,23 @@ namespace ECommerceAPI_ASP.NETCore.Data
                 new Category { Id = menClothingId, Name = "Men's Clothing", UrlHandle = "mens-clothing", ParentCategoryId = fashionId },
                 new Category { Id = womenClothingId, Name = "Women's Clothing", UrlHandle = "womens-clothing", ParentCategoryId = fashionId }
             );
+
+
+
+            modelBuilder.Entity<Product>()
+    .HasOne(p => p.Category)
+    .WithMany(c => c.Products)
+    .HasForeignKey(p => p.CategoryId)
+    .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<Stock>()
+    .HasOne(s => s.Product)
+    .WithMany(p => p.Stocks)
+    .HasForeignKey(s => s.ProductId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+
         }
-
-
-
-
     }
 }

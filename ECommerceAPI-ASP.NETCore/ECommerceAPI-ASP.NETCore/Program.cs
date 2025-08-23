@@ -3,6 +3,8 @@ using Blog_API.Repositories.Implementation;
 using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Data;
 using ECommerceAPI_ASP.NETCore.Mappings;
+using ECommerceAPI_ASP.NETCore.Repositories.Implementation;
+using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +21,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<EcommerceDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("EcommerceConnectionString")));
 builder.Services.AddScoped<ITokenRepository, TokenRepoistory>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IProductRepository,ProductRepository>();
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 builder.Services.AddIdentityCore<IdentityUser>().AddRoles<IdentityRole>()
     .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Blog")

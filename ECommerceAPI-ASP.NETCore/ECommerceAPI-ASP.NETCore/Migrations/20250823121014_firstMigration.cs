@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ECommerceAPI_ASP.NETCore.Migrations
 {
     /// <inheritdoc />
-    public partial class initialmigration : Migration
+    public partial class firstMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -177,6 +177,55 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Products",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VendorId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Products", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Products_AspNetUsers_VendorId",
+                        column: x => x.VendorId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Products_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Stocks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Stocks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Stocks_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
@@ -192,12 +241,12 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 columns: new[] { "Id", "Name", "ParentCategoryId", "UrlHandle" },
                 values: new object[,]
                 {
-                    { new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"), "Fashion", null, "fashion" },
-                    { new Guid("f540b581-4a35-428d-a65e-1578280a942e"), "Electronics", null, "electronics" },
-                    { new Guid("2132fa49-7d53-4f6b-bade-4a4f6ba4a087"), "Mobiles", new Guid("f540b581-4a35-428d-a65e-1578280a942e"), "mobiles" },
-                    { new Guid("4dab995e-217a-469a-9940-6ef1105b2570"), "Women's Clothing", new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"), "womens-clothing" },
-                    { new Guid("b423508e-1198-4198-aff9-b03ae883b654"), "Laptops", new Guid("f540b581-4a35-428d-a65e-1578280a942e"), "laptops" },
-                    { new Guid("b8c63cd4-22b2-4ca5-8ebd-dd4e3ef3ba83"), "Men's Clothing", new Guid("41267264-a61f-43d1-bc86-260ddaae1a6b"), "mens-clothing" }
+                    { new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"), "Electronics", null, "electronics" },
+                    { new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"), "Fashion", null, "fashion" },
+                    { new Guid("09929bb5-3ae0-48ba-9bb6-08d888fb437a"), "Women's Clothing", new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"), "womens-clothing" },
+                    { new Guid("8356fb9c-7dd6-419f-962e-6e51040d4ba1"), "Men's Clothing", new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"), "mens-clothing" },
+                    { new Guid("93da0cac-81b5-4803-830d-4452666ed173"), "Laptops", new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"), "laptops" },
+                    { new Guid("cbce10f7-1083-45d4-a498-34a6da31f686"), "Mobiles", new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"), "mobiles" }
                 });
 
             migrationBuilder.CreateIndex(
@@ -243,6 +292,21 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 name: "IX_Categories_ParentCategoryId",
                 table: "Categories",
                 column: "ParentCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_CategoryId",
+                table: "Products",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_VendorId",
+                table: "Products",
+                column: "VendorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stocks_ProductId",
+                table: "Stocks",
+                column: "ProductId");
         }
 
         /// <inheritdoc />
@@ -264,13 +328,19 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Categories");
+                name: "Stocks");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
+                name: "Products");
+
+            migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Categories");
         }
     }
 }
