@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceAPI_ASP.NETCore.Migrations
 {
     [DbContext(typeof(EcommerceDBContext))]
-    [Migration("20250823121014_firstMigration")]
+    [Migration("20250824104041_firstMigration")]
     partial class firstMigration
     {
         /// <inheritdoc />
@@ -51,42 +51,42 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"),
+                            Id = new Guid("18556e31-9b9e-413e-9571-8575eca55132"),
                             Name = "Electronics",
                             UrlHandle = "electronics"
                         },
                         new
                         {
-                            Id = new Guid("cbce10f7-1083-45d4-a498-34a6da31f686"),
+                            Id = new Guid("5d1c6bd6-b906-4e49-9e44-62bd5fff4224"),
                             Name = "Mobiles",
-                            ParentCategoryId = new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"),
+                            ParentCategoryId = new Guid("18556e31-9b9e-413e-9571-8575eca55132"),
                             UrlHandle = "mobiles"
                         },
                         new
                         {
-                            Id = new Guid("93da0cac-81b5-4803-830d-4452666ed173"),
+                            Id = new Guid("146f655c-6d70-4cd5-b7fa-c7f3182284ff"),
                             Name = "Laptops",
-                            ParentCategoryId = new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"),
+                            ParentCategoryId = new Guid("18556e31-9b9e-413e-9571-8575eca55132"),
                             UrlHandle = "laptops"
                         },
                         new
                         {
-                            Id = new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"),
+                            Id = new Guid("5deb0062-9617-4fe1-a4d5-f0e81bae3546"),
                             Name = "Fashion",
                             UrlHandle = "fashion"
                         },
                         new
                         {
-                            Id = new Guid("8356fb9c-7dd6-419f-962e-6e51040d4ba1"),
+                            Id = new Guid("09404ec7-53f4-4f29-a22c-8e67f6477bf9"),
                             Name = "Men's Clothing",
-                            ParentCategoryId = new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"),
+                            ParentCategoryId = new Guid("5deb0062-9617-4fe1-a4d5-f0e81bae3546"),
                             UrlHandle = "mens-clothing"
                         },
                         new
                         {
-                            Id = new Guid("09929bb5-3ae0-48ba-9bb6-08d888fb437a"),
+                            Id = new Guid("f1147739-57b7-4973-b477-1db26f18e9fd"),
                             Name = "Women's Clothing",
-                            ParentCategoryId = new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"),
+                            ParentCategoryId = new Guid("5deb0062-9617-4fe1-a4d5-f0e81bae3546"),
                             UrlHandle = "womens-clothing"
                         });
                 });
@@ -134,6 +134,9 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Color")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
 
@@ -142,6 +145,9 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<string>("Size")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

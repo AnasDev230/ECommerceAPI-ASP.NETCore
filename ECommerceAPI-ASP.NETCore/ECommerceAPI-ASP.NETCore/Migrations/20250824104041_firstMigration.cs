@@ -212,6 +212,8 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Size = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Quantity = table.Column<int>(type: "int", nullable: false),
                     LastUpdated = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -241,12 +243,12 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                 columns: new[] { "Id", "Name", "ParentCategoryId", "UrlHandle" },
                 values: new object[,]
                 {
-                    { new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"), "Electronics", null, "electronics" },
-                    { new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"), "Fashion", null, "fashion" },
-                    { new Guid("09929bb5-3ae0-48ba-9bb6-08d888fb437a"), "Women's Clothing", new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"), "womens-clothing" },
-                    { new Guid("8356fb9c-7dd6-419f-962e-6e51040d4ba1"), "Men's Clothing", new Guid("d145617e-6149-46ed-86e0-3e9d101e59f9"), "mens-clothing" },
-                    { new Guid("93da0cac-81b5-4803-830d-4452666ed173"), "Laptops", new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"), "laptops" },
-                    { new Guid("cbce10f7-1083-45d4-a498-34a6da31f686"), "Mobiles", new Guid("bf3f177a-455d-45ad-8307-00d8e742bac5"), "mobiles" }
+                    { new Guid("18556e31-9b9e-413e-9571-8575eca55132"), "Electronics", null, "electronics" },
+                    { new Guid("5deb0062-9617-4fe1-a4d5-f0e81bae3546"), "Fashion", null, "fashion" },
+                    { new Guid("09404ec7-53f4-4f29-a22c-8e67f6477bf9"), "Men's Clothing", new Guid("5deb0062-9617-4fe1-a4d5-f0e81bae3546"), "mens-clothing" },
+                    { new Guid("146f655c-6d70-4cd5-b7fa-c7f3182284ff"), "Laptops", new Guid("18556e31-9b9e-413e-9571-8575eca55132"), "laptops" },
+                    { new Guid("5d1c6bd6-b906-4e49-9e44-62bd5fff4224"), "Mobiles", new Guid("18556e31-9b9e-413e-9571-8575eca55132"), "mobiles" },
+                    { new Guid("f1147739-57b7-4973-b477-1db26f18e9fd"), "Women's Clothing", new Guid("5deb0062-9617-4fe1-a4d5-f0e81bae3546"), "womens-clothing" }
                 });
 
             migrationBuilder.CreateIndex(
