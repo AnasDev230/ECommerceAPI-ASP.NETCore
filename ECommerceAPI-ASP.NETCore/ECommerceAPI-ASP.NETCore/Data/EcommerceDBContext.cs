@@ -15,6 +15,9 @@ namespace ECommerceAPI_ASP.NETCore.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Stock> Stocks { get; set; }
+        public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -87,6 +90,19 @@ namespace ECommerceAPI_ASP.NETCore.Data
     .HasForeignKey(s => s.ProductId)
     .OnDelete(DeleteBehavior.Cascade);
 
+
+
+            modelBuilder.Entity<ShoppingCart>()
+    .HasMany(c => c.Items)
+    .WithOne(i => i.ShoppingCart)
+    .HasForeignKey(i => i.ShoppingCartId)
+    .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ShoppingCartItem>()
+    .HasOne(i => i.Stock)
+    .WithMany()
+    .HasForeignKey(i => i.StockId)
+    .OnDelete(DeleteBehavior.Restrict);
 
         }
     }
