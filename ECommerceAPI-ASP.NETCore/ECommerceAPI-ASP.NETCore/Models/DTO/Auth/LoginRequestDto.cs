@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Blog_API.Models.DTO
+namespace ECommerceAPI_ASP.NETCore.Models.DTO.Auth
 {
     public class LoginRequestDto
     {
         [Required]
         [DataType(DataType.EmailAddress)]
-        public string Username {  get; set; }
+        public string Username { get; set; }
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; }

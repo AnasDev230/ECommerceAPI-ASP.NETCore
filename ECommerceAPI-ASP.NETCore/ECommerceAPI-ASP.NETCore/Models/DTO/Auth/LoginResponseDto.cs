@@ -1,4 +1,4 @@
-﻿namespace Blog_API.Models.DTO
+﻿namespace ECommerceAPI_ASP.NETCore.Models.DTO.Auth
 {
     public class LoginResponseDto
     {

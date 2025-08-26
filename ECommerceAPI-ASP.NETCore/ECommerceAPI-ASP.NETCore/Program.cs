@@ -23,6 +23,7 @@ builder.Services.AddScoped<ITokenRepository, TokenRepoistory>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository,ProductRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
+builder.Services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 builder.Services.AddIdentityCore<IdentityUser>().AddRoles<IdentityRole>()
     .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Blog")

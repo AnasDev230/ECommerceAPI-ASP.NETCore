@@ -3,6 +3,7 @@ using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock;
+using ECommerceAPI_ASP.NETCore.Models.DTO.ShoppingCart;
 
 namespace ECommerceAPI_ASP.NETCore.Mappings
 {
@@ -19,6 +20,9 @@ namespace ECommerceAPI_ASP.NETCore.Mappings
             CreateMap<Stock,StockDto>().ReverseMap();   
             CreateMap<CreateStockRequestDto, Stock>();
             CreateMap<UpdateStockRequestDto, Stock>();
+
+            CreateMap<ShoppingCart,ShoppingCartDto>().ReverseMap();
+            CreateMap<CreateShoppingCartRequestDto, ShoppingCart>();
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Blog_API.Models.DTO;
-using Blog_API.Repositories.Interface;
+﻿using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Data;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using Microsoft.AspNetCore.Mvc;

@@ -1,5 +1,5 @@
-﻿using Blog_API.Models.DTO;
-using Blog_API.Repositories.Interface;
+﻿using Blog_API.Repositories.Interface;
+using ECommerceAPI_ASP.NETCore.Models.DTO.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
