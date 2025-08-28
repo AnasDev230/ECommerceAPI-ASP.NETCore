@@ -4,6 +4,7 @@ using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock;
 using ECommerceAPI_ASP.NETCore.Models.DTO.ShoppingCart;
+using ECommerceAPI_ASP.NETCore.Models.DTO.ShoppingCart.ShoppingCartItem;
 
 namespace ECommerceAPI_ASP.NETCore.Mappings
 {
@@ -23,6 +24,10 @@ namespace ECommerceAPI_ASP.NETCore.Mappings
 
             CreateMap<ShoppingCart,ShoppingCartDto>().ReverseMap();
             CreateMap<CreateShoppingCartRequestDto, ShoppingCart>();
+
+            CreateMap<ShoppingCartItem,ShoppingCartItemDto>().ReverseMap();
+            CreateMap<CreateShoppingCartItemRequestDto, ShoppingCartItem>();
+            CreateMap<UpdateShoppingCartItemRequestDto, ShoppingCartItem>();
         }
     }
 }
