@@ -14,5 +14,6 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
         public Guid CategoryId { get; set; }
         public Category Category { get; set; }
         public ICollection<Stock> Stocks { get; set; }
+        public ICollection<Rating> Ratings { get; set; }
     }
 }

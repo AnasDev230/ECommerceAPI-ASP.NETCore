@@ -23,16 +23,6 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             this.mapper = mapper;
             this.shoppingCartRepository = shoppingCartRepository;
         }
-        //[HttpPost("Add", Name = "AddItem")]
-        //[ProducesResponseType(StatusCodes.Status201Created)]
-
-        //public async Task<IActionResult> AddCartItem([FromBody] CreateShoppingCartItemRequestDto request)
-        //{
-        //    var item = mapper.Map<ShoppingCartItem>(request);
-        //    await shoppingCartItemRepository.CreateAsync(item);
-        //    return Created("", mapper.Map<ShoppingCartItemDto>(item));
-        //}
-
         [HttpPost("Add", Name = "AddItem")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [Authorize(Roles ="Customer")]
@@ -68,8 +58,6 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
 
         }
-
-
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]

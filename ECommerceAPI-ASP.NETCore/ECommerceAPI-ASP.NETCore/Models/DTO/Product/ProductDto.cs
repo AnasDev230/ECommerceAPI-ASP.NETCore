@@ -1,4 +1,6 @@
-﻿namespace ECommerceAPI_ASP.NETCore.Models.DTO.Product
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace ECommerceAPI_ASP.NETCore.Models.DTO.Product
 {
     public class ProductDto
     {

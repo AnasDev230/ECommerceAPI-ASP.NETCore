@@ -17,7 +17,7 @@ namespace ECommerceAPI_ASP.NETCore.Data
         public DbSet<Stock> Stocks { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
         public DbSet<ShoppingCartItem> ShoppingCartItems { get; set; }
-
+        public DbSet<Rating> Ratings { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -103,6 +103,21 @@ namespace ECommerceAPI_ASP.NETCore.Data
     .WithMany()
     .HasForeignKey(i => i.StockId)
     .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<Rating>()
+       .HasOne(r => r.Product)
+       .WithMany(p => p.Ratings)
+       .HasForeignKey(r => r.ProductId);
+
+            modelBuilder.Entity<Rating>()
+       .HasOne(r => r.Customer)
+       .WithMany()
+       .HasForeignKey(r => r.CustomerId);
+
+            modelBuilder.Entity<Rating>()
+        .HasIndex(r => new { r.CustomerId, r.ProductId })
+        .IsUnique();
 
         }
     }

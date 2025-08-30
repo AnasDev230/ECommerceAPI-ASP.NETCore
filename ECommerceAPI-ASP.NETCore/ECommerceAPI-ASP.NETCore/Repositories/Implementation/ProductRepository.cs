@@ -34,7 +34,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 
         public async Task<IEnumerable<Product>> GetAllProductsByCategoryID(Guid ID)
         {
-            return await dBContext.Products.Where(p => p.CategoryId == ID).Include(p => p.Vendor).ToListAsync();
+            return await dBContext.Products.Where(p => p.CategoryId == ID).ToListAsync();
         }
 
         public Task<IEnumerable<Stock>> GetAllStockAsync()
