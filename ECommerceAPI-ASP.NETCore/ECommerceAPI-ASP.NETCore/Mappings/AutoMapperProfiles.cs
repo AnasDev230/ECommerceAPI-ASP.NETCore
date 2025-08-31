@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
+using ECommerceAPI_ASP.NETCore.Models.DTO.Order;
+using ECommerceAPI_ASP.NETCore.Models.DTO.Order.OrderItem;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Rating;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock;
@@ -34,6 +36,9 @@ namespace ECommerceAPI_ASP.NETCore.Mappings
             CreateMap<Rating,RatingDto>().ReverseMap();
             CreateMap<CreateRatingRequestDto, Rating>();
             CreateMap<UpdateRatingRequestDto, Rating>();
+
+            CreateMap<OrderItem, OrderItemDto>().ReverseMap();
+            CreateMap<Order,OrderDto>().ReverseMap();
         }
     }
 }

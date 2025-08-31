@@ -14,6 +14,14 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         }
         public async Task<ShoppingCartItem> CreateAsync(ShoppingCartItem item)
         {
+            //var stock = await dBcontext.Stocks.FirstOrDefaultAsync(x=>x.Id==item.StockId);
+            //if (stock == null)
+            //    throw new Exception("Stock Not Found.");
+            //if (stock.Quantity < item.Quantity)
+            //    throw new Exception("Not enough stock available.");
+
+            //stock.Quantity -= item.Quantity;
+
             await dBcontext.ShoppingCartItems.AddAsync(item);
             await dBcontext.SaveChangesAsync(); 
             return item;
