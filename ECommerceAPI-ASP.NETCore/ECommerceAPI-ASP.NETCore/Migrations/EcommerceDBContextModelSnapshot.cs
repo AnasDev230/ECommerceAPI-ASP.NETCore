@@ -28,6 +28,9 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ImageID")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -35,15 +38,43 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                     b.Property<Guid?>("ParentCategoryId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("UrlHandle")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("ImageID");
 
                     b.HasIndex("ParentCategoryId");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Image", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FileExtension")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Images");
                 });
 
             modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Order", b =>
@@ -116,9 +147,8 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid?>("ImageID")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -134,6 +164,8 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("ImageID");
 
                     b.HasIndex("VendorId");
 
@@ -444,9 +476,15 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
 
             modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Category", b =>
                 {
+                    b.HasOne("ECommerceAPI_ASP.NETCore.Models.Domain.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageID");
+
                     b.HasOne("ECommerceAPI_ASP.NETCore.Models.Domain.Category", "ParentCategory")
                         .WithMany("SubCategories")
                         .HasForeignKey("ParentCategoryId");
+
+                    b.Navigation("Image");
 
                     b.Navigation("ParentCategory");
                 });
@@ -489,6 +527,10 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ECommerceAPI_ASP.NETCore.Models.Domain.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageID");
+
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Vendor")
                         .WithMany()
                         .HasForeignKey("VendorId")
@@ -496,6 +538,8 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Image");
 
                     b.Navigation("Vendor");
                 });

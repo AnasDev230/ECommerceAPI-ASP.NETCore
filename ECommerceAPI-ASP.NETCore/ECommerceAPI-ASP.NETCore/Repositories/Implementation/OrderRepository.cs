@@ -14,6 +14,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         }
         public async Task<Order> CreateOrderAsync(string customerID)
         {
+            using var transaction = await dBContext.Database.BeginTransactionAsync();
             var cart = await dBContext.ShoppingCarts.Include(c=>c.Items).ThenInclude(i=>i.Stock).ThenInclude(s => s.Product).FirstOrDefaultAsync(c=>c.CustomerId==customerID);
             if (cart == null || !cart.Items.Any())
                 throw new Exception("Cart is empty.");
@@ -27,6 +28,9 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 
             foreach (var cartItem in cart.Items)
             {
+                if(cartItem.Stock.Quantity<cartItem.Quantity)
+                    throw new Exception($"Insufficient stock for {cartItem.Stock.Product.Name}");
+
                 var orderItem = new OrderItem
                 {
                     OrderId=order.Id,
@@ -41,19 +45,29 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             }
             await dBContext.Orders.AddAsync(order);
             dBContext.ShoppingCartItems.RemoveRange(cart.Items);
+            dBContext.ShoppingCarts.Remove(cart);
             await dBContext.SaveChangesAsync();
+            await transaction.CommitAsync();
             return order;
 
         }
 
         public async Task<bool> DeleteOrderAsync(Guid id)
         {
-            var order = await dBContext.Orders.FindAsync(id);
+            using var transaction = await dBContext.Database.BeginTransactionAsync();
+            var order = await dBContext.Orders.Include(o => o.Items).FirstOrDefaultAsync(x=>x.Id==id);
             if (order == null)
                 return false;
 
+            foreach (var item in order.Items)
+            {
+                item.Stock.Quantity += item.Quantity;
+            }
             dBContext.Orders.Remove(order);
+            dBContext.OrderItems.RemoveRange(order.Items);
+            
             await dBContext.SaveChangesAsync();
+            await transaction.CommitAsync();
             return true;
         }
 

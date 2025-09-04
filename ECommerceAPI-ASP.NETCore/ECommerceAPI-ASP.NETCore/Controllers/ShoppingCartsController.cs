@@ -51,6 +51,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (customerId == null)
                 return Unauthorized();
             var shoppingCart=await shoppingCartRepository.GetCartByCustomerIdAsync(customerId);
+            if(shoppingCart == null)
+                return NotFound("Shopping Cart is Empty");
             return Ok(mapper.Map<ShoppingCartDto>(shoppingCart));
         }
 

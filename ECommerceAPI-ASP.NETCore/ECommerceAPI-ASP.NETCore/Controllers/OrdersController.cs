@@ -41,11 +41,15 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                     CustomerId = order.CustomerId,
                     CreatedAt = order.CreatedAt,
                     TotalAmount=order.TotalAmount,
+                    Status = order.Status,
                     Items = order.Items.Select(i => new OrderItemDto
                     {
                         Id = i.Id,
                         StockId = i.StockId,
-                        Quantity = i.Quantity
+                        Quantity = i.Quantity,
+                        UnitPrice = i.UnitPrice,
+                        TotalPrice = i.TotalPrice,
+                        
                     }).ToList()
 
                 };
@@ -98,7 +102,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                 return Ok(mapper.Map<OrderDto>(order));
             }
 
-            return BadRequest();
+            return BadRequest("Incorrect Status!!");
         }
 
         [HttpDelete("{orderId}")]
