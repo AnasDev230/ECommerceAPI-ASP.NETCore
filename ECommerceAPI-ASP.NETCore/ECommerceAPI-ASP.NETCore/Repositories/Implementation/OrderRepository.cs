@@ -86,10 +86,12 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return await dBContext.Orders.Where(o=>o.CustomerId==customerId).ToListAsync();
         }
 
-        public async Task<Order> UpdateOrderAsync(Order order)
+        public async Task<Order> UpdateOrderStatusAsync(Order order)
         {
             var existingOrder = await dBContext.Orders.FindAsync(order.Id);
-            if(existingOrder != null)
+            if (existingOrder.Status is "Shipped" or "Completed" or "Cancelled")
+                return null;
+            if (existingOrder != null)
             {
                 dBContext.Entry(existingOrder).CurrentValues.SetValues(order);
                 await dBContext.SaveChangesAsync();

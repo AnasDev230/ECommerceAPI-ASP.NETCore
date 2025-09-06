@@ -95,10 +95,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             var order = await orderRepository.GetOrderByIdAsync(orderId);
             if (order == null)
                 return NotFound();
-            if(request.Status is "Pending" or "Paid" or "Cancelled" or "Shipped" or "Completed" or "Cancelled")
+            if(request.Status is "Pending" or "Paid" or "Shipped" or "Completed" or "Cancelled")
             {
                 order.Status = request.Status;
-                order = await orderRepository.UpdateOrderAsync(order);
+                order = await orderRepository.UpdateOrderStatusAsync(order);
                 return Ok(mapper.Map<OrderDto>(order));
             }
 

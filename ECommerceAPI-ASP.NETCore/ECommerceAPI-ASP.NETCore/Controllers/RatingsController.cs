@@ -25,7 +25,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> AddRating([FromBody] CreateRatingRequestDto request)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -46,7 +46,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             return Created("", mapper.Map<RatingDto>(rating));
         }
         [HttpGet]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetMyRating([FromBody] GetMyRatingRequestDto request)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -61,7 +61,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
         [HttpGet("{productID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetRatingsByProduct([FromRoute] Guid productID)
         {
             var ratings = ratingRepository.GetRatingsByProductAsync(productID);
@@ -69,7 +69,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpPut("{productId}")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> UpdateRating([FromRoute] Guid productId,[FromBody] UpdateRatingRequestDto request)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -84,7 +84,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpDelete("{productId}")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> DeleteRating([FromRoute] Guid productId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);

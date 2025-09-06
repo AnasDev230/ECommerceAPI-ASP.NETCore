@@ -62,7 +62,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> GetItemByID(Guid ID)
         {
             var item=shoppingCartItemRepository.GetItemsByCartIdAsync(ID);
@@ -73,7 +73,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet("{ID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> GetItemsByCartIdAsync([FromRoute] Guid ID)
         {
             var items = shoppingCartItemRepository.GetItemsByCartIdAsync(ID);
@@ -99,7 +99,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpDelete]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> DeleteItem(Guid ID)
         {
             var item = await shoppingCartItemRepository.GetByIdAsync(ID);

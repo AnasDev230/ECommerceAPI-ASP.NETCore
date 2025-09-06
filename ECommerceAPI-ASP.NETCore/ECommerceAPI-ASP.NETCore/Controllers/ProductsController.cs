@@ -5,6 +5,7 @@ using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,6 +27,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
         [HttpPost("Add", Name = "AddProduct")]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> AddProduct([FromBody] CreateProductRequestDto request)
         {
             var product = mapper.Map<Product>(request);
@@ -35,6 +37,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet("GetByID/{ID}", Name = "GetProductByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetProductByID([FromRoute] Guid ID)
         {
             Product product=await productRepository.GetByID(ID);
@@ -45,6 +48,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet("GetProductsByCategoryID/{ID}", Name = "GetProductByCategoryID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetProductByCategoryID([FromRoute] Guid ID)
         {
             var category= await categoryRepository.GetByID(ID);
@@ -57,6 +61,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpPut("{ID:Guid}", Name = "EditProduct")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> EditProduct([FromRoute] Guid ID, CreateProductRequestDto updateProductRequestDto)
         {
             var product = await productRepository.GetByID(ID);
@@ -70,6 +75,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Route("{ID:Guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> DeleteProduct([FromRoute] Guid ID)
         {
             var product = await productRepository.GetByID(ID);

@@ -22,7 +22,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
         [HttpPost("Add", Name = "AddCategory")]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddCategory([FromBody] CreateCategoryRequestDto request)
         {
             var category = mapper.Map<Category>(request);
@@ -31,6 +31,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetAllCategories()
         {
             var categories = await categoryRepository.GetAllAsync();
@@ -39,6 +40,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet("GetByID/{ID}", Name = "GetCategoryByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetCategoryByID([FromRoute] Guid ID)
         {
             Category category = await categoryRepository.GetByID(ID);
@@ -50,6 +52,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpPut("{ID:Guid}", Name = "EditCategory")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EditCategory([FromRoute] Guid ID, CreateCategoryRequestDto updateCategoryRequestDto)
         {
             var category= await categoryRepository.GetByID(ID);
@@ -64,6 +67,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Route("{ID:Guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory([FromRoute] Guid ID)
         {
             var category = await categoryRepository.GetByID(ID);

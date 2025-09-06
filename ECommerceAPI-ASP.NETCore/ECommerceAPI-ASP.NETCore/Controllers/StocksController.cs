@@ -4,6 +4,7 @@ using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,6 +27,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpPost("Add", Name = "AddStock")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> AddStock([FromBody] CreateStockRequestDto request)
         {
             var product=await productRepository.GetByID(request.ProductId);
@@ -39,6 +41,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
         [HttpGet("{productID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> GetAllStocksByProductID([FromRoute] Guid productID)
         {
             var product = await productRepository.GetByID(productID);
@@ -51,6 +54,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet("GetByID/{StockID}", Name = "GetStockByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> GetByID([FromRoute] Guid StockID)
         {
             var stock=await stockRepository.GetByID(StockID);
@@ -61,6 +65,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpPut("{StockID:Guid}", Name = "EditStock")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> UpdateStock([FromRoute] Guid StockID,[FromBody] UpdateStockRequestDto request)
         {
             var stock = await stockRepository.GetByID(StockID);
@@ -74,7 +79,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Route("{StockID:Guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> DeleteProduct([FromRoute] Guid StockID)
+        [Authorize(Roles = "Admin,Vendor")]
+        public async Task<IActionResult> DeleteStock([FromRoute] Guid StockID)
         {
             var stock = await stockRepository.GetByID(StockID);
             if (stock == null)
