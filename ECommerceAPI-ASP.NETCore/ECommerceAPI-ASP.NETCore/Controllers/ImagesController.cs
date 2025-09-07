@@ -1,6 +1,7 @@
 ﻿using Blog_API.Models.DTO;
 using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +19,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpPost]
-
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {
             ValidateFileUpload(file);
@@ -47,6 +48,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
             var images = await imageRepository.GetAll();
@@ -67,6 +69,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpDelete("{ID:guid}")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> DeleteImage(Guid ID)
         {
             var image = await imageRepository.DeleteImage(ID);
@@ -85,6 +88,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetImageByID([FromRoute] Guid id)
         {
             var image=await imageRepository.GetByID(id);

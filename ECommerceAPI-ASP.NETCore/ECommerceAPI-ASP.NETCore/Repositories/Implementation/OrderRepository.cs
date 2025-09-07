@@ -36,7 +36,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                     OrderId=order.Id,
                     StockId=cartItem.StockId,
                     Quantity=cartItem.Quantity,
-                    UnitPrice=cartItem.Stock.Product.Price,
+                    UnitPrice=cartItem.Stock.Price,
                 };
                 orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
                 order.Items.Add(orderItem);

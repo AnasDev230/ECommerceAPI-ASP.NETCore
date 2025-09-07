@@ -31,7 +31,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [Authorize(Roles = "Admin,Vendor,Customer")]
+        //[Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetAllCategories()
         {
             var categories = await categoryRepository.GetAllAsync();
@@ -40,7 +40,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [HttpGet("GetByID/{ID}", Name = "GetCategoryByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Authorize(Roles = "Admin,Vendor,Customer")]
+        //[Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetCategoryByID([FromRoute] Guid ID)
         {
             Category category = await categoryRepository.GetByID(ID);

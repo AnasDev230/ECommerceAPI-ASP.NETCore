@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using Blog_API.Repositories.Implementation;
 using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
@@ -27,10 +28,22 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
         [HttpPost("Add", Name = "AddProduct")]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> AddProduct([FromBody] CreateProductRequestDto request)
         {
-            var product = mapper.Map<Product>(request);
+            var vendorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (vendorId == null)
+                return Unauthorized();
+            var product = new Product
+            {
+
+                Name = request.Name,
+                Description = request.Description,
+                ImageID=request.ImageID,
+                VendorId = vendorId,
+                CategoryId = request.CategoryId,
+            };
             await productRepository.CreateAsync(product);
             return Created("", mapper.Map<ProductDto>(product));
         }

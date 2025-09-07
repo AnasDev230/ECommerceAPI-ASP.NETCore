@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ECommerceAPI_ASP.NETCore.Migrations
 {
     [DbContext(typeof(EcommerceDBContext))]
-    [Migration("20250904113533_Initial_Migration")]
-    partial class Initial_Migration
+    [Migration("20250907160703_firstMigration")]
+    partial class firstMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -157,9 +157,6 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("VendorId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -260,8 +257,14 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                     b.Property<string>("Color")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<Guid?>("ImageID")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uniqueidentifier");
@@ -273,6 +276,8 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ImageID");
 
                     b.HasIndex("ProductId");
 
@@ -598,11 +603,17 @@ namespace ECommerceAPI_ASP.NETCore.Migrations
 
             modelBuilder.Entity("ECommerceAPI_ASP.NETCore.Models.Domain.Stock", b =>
                 {
+                    b.HasOne("ECommerceAPI_ASP.NETCore.Models.Domain.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageID");
+
                     b.HasOne("ECommerceAPI_ASP.NETCore.Models.Domain.Product", "Product")
                         .WithMany("Stocks")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Image");
 
                     b.Navigation("Product");
                 });

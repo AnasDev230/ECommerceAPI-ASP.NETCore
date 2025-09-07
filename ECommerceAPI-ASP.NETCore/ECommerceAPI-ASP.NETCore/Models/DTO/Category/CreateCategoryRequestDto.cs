@@ -6,7 +6,7 @@ namespace ECommerceAPI_ASP.NETCore.Models.DTO.Category
     {
         [Required]
         public string Name { get; set; }
-        public string UrlHandle { get; set; }
+        public Guid? ImageID { get; set; }
         public Guid? ParentCategoryId { get; set; }
     }
 }
