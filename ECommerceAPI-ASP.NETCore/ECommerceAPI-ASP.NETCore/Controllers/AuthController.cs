@@ -1,6 +1,9 @@
-﻿using Blog_API.Repositories.Interface;
+﻿using System.Security.Claims;
+using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -68,6 +71,40 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             }
             return BadRequest("Username Or Password Incorrect!!");
         }
-
+        [HttpDelete("DeleteAccount")]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles ="Admin,Vendor,Customer")]
+        public async Task<IActionResult> Delete()
+        {
+            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userID == null)
+                return Unauthorized();
+            var identityUser=await userManager.FindByIdAsync(userID);
+            if(identityUser == null)
+                return BadRequest("Something Went Wrong!");
+            await userManager.DeleteAsync(identityUser);
+            return Ok("User Deleted Successfully");
+            
+        }
+        [HttpPut("ChangePassword")]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
+        public async Task<IActionResult> ChangePassword([FromBody] UpdatePasswordRequestDto request)
+        {
+            var userID = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userID == null)
+                return Unauthorized();
+            var identityUser = await userManager.FindByIdAsync(userID);
+            if (identityUser == null)
+                return BadRequest("Something Went Wrong!");
+            var response=await userManager.ChangePasswordAsync(identityUser,request.CurrentPassword,request.NewPassword);
+            if (!response.Succeeded)
+                return BadRequest(response.Errors);
+            return Ok("Password Changed Successfully");
+        }
     }
 }
