@@ -22,12 +22,14 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 
         public async Task<Product?> DeleteAsync(Guid id)
         {
-            Product product = await dBContext.Products.FirstOrDefaultAsync(x => x.Id == id);
+            Product product = await dBContext.Products.Include(p=>p.Ratings).FirstOrDefaultAsync(p=>p.Id==id);
             if (product is null)
             {
                 return null;
             }
+            dBContext.Ratings.RemoveRange(product.Ratings);
             dBContext.Products.Remove(product);
+            
             await dBContext.SaveChangesAsync();
             return product;
         }

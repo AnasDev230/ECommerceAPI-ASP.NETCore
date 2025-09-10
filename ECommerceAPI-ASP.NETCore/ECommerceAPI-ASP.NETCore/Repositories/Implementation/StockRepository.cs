@@ -21,10 +21,15 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 
         public async Task<Stock?> DeleteAsync(Guid id)
         {
-            var stock=dBContext.Stocks.FirstOrDefault(x => x.Id == id);
+            var stock= await dBContext.Stocks.FindAsync(id);
             if (stock == null)
                 return null;
-             dBContext.Stocks.Remove(stock);
+             var cartItems=await dBContext.ShoppingCartItems.Where(c=>c.StockId==stock.Id).ToListAsync();
+            if (cartItems.Any())
+            {
+                dBContext.ShoppingCartItems.RemoveRange(cartItems);
+            }
+            dBContext.Stocks.Remove(stock);
             await dBContext.SaveChangesAsync();
             return stock;
         }
