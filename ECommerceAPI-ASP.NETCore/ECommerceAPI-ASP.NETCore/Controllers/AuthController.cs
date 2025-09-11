@@ -31,7 +31,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             var identityUser = new IdentityUser
             {
                 UserName = request.Username,
-                Email = request.Username,
+                Email = request.Email,
             };
             var identityResult = await userManager.CreateAsync(identityUser, request.Password);
             if (identityResult.Succeeded)
@@ -50,7 +50,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
-            var user = await userManager.FindByEmailAsync(request.Username);
+            var user = await userManager.FindByEmailAsync(request.email);
             if (user is not null)
             {
                 var PasswordResult = await userManager.CheckPasswordAsync(user, request.Password);
