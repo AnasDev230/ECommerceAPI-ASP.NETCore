@@ -34,7 +34,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             try
             {
 
-                var order=await orderRepository.CreateOrderAsync(customerId);
+                var order=await orderRepository.CreateOrderFromCartAsync(customerId);
                 var response = new OrderDto
                 {
                     Id = order.Id,
@@ -98,7 +98,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 if(request.Status is OrderStatus.Pending or OrderStatus.Paid or OrderStatus.Processing or OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
             {
                 order.Status = request.Status;
-                order = await orderRepository.UpdateOrderStatusAsync(order);
+                order = await orderRepository.UpdateOrderStatusAsync(orderId, request.Status);
                 return Ok(mapper.Map<OrderDto>(order));
             }
 

@@ -7,53 +7,86 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 {
     public class StockRepository : IStockRepository
     {
-        private readonly EcommerceDBContext dBContext;
-        public StockRepository(EcommerceDBContext dBContext)
+        private readonly EcommerceDBContext dbContext;
+
+        public StockRepository(EcommerceDBContext dbContext)
         {
-            this.dBContext = dBContext;
+            this.dbContext = dbContext;
         }
+
         public async Task<Stock> CreateAsync(Stock stock)
         {
-            await dBContext.Stocks.AddAsync(stock);
-            await dBContext.SaveChangesAsync();
+            await dbContext.Stocks.AddAsync(stock);
+            await dbContext.SaveChangesAsync();
             return stock;
         }
 
         public async Task<Stock?> DeleteAsync(Guid id)
         {
-            var stock= await dBContext.Stocks.FindAsync(id);
+            var stock = await dbContext.Stocks
+                .Include(s => s.Product)
+                .Include(s => s.Image)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             if (stock == null)
                 return null;
-             var cartItems=await dBContext.ShoppingCartItems.Where(c=>c.StockId==stock.Id).ToListAsync();
-            if (cartItems.Any())
-            {
-                dBContext.ShoppingCartItems.RemoveRange(cartItems);
-            }
-            dBContext.Stocks.Remove(stock);
-            await dBContext.SaveChangesAsync();
+
+            var isInCart = await dbContext.ShoppingCartItems.AnyAsync(c => c.StockId == stock.Id);
+            if (isInCart)
+                throw new InvalidOperationException("Cannot delete stock that is in shopping carts.");
+
+            dbContext.Stocks.Remove(stock);
+            await dbContext.SaveChangesAsync();
             return stock;
         }
 
-        public async Task<IEnumerable<Stock>> GetAllByProductIdAsync(Guid id)
+        public async Task<IEnumerable<Stock>> GetAllByProductIdAsync(Guid productId)
         {
-            return await dBContext.Stocks.Where(x => x.ProductId == id).Include(x=>x.Product).ToListAsync();
+            return await dbContext.Stocks
+                .Where(x => x.ProductId == productId)
+                .Include(x => x.Product)
+                .Include(x => x.Image)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Stock>> GetAllStocksAsync()
+        {
+            return await dbContext.Stocks
+                .Include(s => s.Product)
+                .Include(s => s.Image)
+                .ToListAsync();
         }
 
         public async Task<Stock?> GetByID(Guid id)
         {
-            return await dBContext.Stocks.FirstOrDefaultAsync(x => x.Id == id);
+            return await dbContext.Stocks
+                .Include(s => s.Product)
+                .Include(s => s.Image)
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<bool> IsUsedInCartAsync(Guid stockId)
+        {
+            return await dbContext.ShoppingCartItems.AnyAsync(c => c.StockId == stockId);
         }
 
         public async Task<Stock?> UpdateAsync(Stock stock)
         {
-            Stock existingstock = await dBContext.Stocks.FirstOrDefaultAsync(x => x.Id == stock.Id);
-            if (existingstock != null)
-            {
-                dBContext.Entry(existingstock).CurrentValues.SetValues(stock);
-                await dBContext.SaveChangesAsync();
-                return stock;
-            }
-            return null;
+            var existingStock = await dbContext.Stocks.FirstOrDefaultAsync(x => x.Id == stock.Id);
+            if (existingStock == null)
+                return null;
+
+            existingStock.SKU = stock.SKU;
+            existingStock.Color = stock.Color;
+            existingStock.Size = stock.Size;
+            existingStock.Quantity = stock.Quantity;
+            existingStock.Price = stock.Price;
+            existingStock.ImageID = stock.ImageID;
+            existingStock.ProductId = stock.ProductId;
+            existingStock.UpdatedAt = DateTime.UtcNow;
+
+            await dbContext.SaveChangesAsync();
+            return existingStock;
         }
     }
 }

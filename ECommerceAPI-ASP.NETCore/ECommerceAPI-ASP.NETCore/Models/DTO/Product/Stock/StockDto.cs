@@ -1,4 +1,4 @@
-﻿using Blog_API.Models.DTO;
+﻿using ECommerceAPI_ASP.NETCore.Models.DTO;
 
 namespace ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock
 {

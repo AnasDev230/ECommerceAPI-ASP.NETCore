@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
+using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

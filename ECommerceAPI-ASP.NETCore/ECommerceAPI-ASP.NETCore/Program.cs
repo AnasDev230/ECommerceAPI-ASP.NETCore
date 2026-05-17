@@ -1,6 +1,4 @@
 using System.Text;
-using Blog_API.Repositories.Implementation;
-using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Data;
 using ECommerceAPI_ASP.NETCore.Mappings;
 using ECommerceAPI_ASP.NETCore.Repositories.Implementation;
@@ -51,7 +49,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddDbContext<EcommerceDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("EcommerceConnectionString")));
-builder.Services.AddScoped<ITokenRepository, TokenRepoistory>();
+builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository,ProductRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();

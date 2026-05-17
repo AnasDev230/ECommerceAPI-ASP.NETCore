@@ -8,5 +8,6 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<ShoppingCart?> GetCartByCustomerIdAsync(string customerId);
         Task<ShoppingCart?> GetCartByID(Guid id);
         Task<ShoppingCart?> DeleteAsync(Guid id);
+        Task<ShoppingCart> GetOrCreateAsync(string customerId);
     }
 }

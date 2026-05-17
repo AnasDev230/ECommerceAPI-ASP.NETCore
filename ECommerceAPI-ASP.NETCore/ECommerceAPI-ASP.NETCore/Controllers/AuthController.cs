@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
-using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Auth;
+using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -63,7 +63,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                     var roles = await userManager.GetRolesAsync(user);
                     if (roles != null)
                     {
-                        var jwtToken = await tokenRepository.CreateJWTToken(user, roles.ToList());
+                        var jwtToken = tokenRepository.CreateJWTToken(user, roles.ToList());
                         var response = new LoginResponseDto
                         {
                             JwtToken = jwtToken

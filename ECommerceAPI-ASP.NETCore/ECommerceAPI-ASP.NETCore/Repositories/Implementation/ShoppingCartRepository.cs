@@ -7,37 +7,73 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 {
     public class ShoppingCartRepository : IShoppingCartRepository
     {
-        private readonly EcommerceDBContext dBContext;
+        private readonly EcommerceDBContext dbContext;
 
-        public ShoppingCartRepository(EcommerceDBContext dBContext)
+        public ShoppingCartRepository(EcommerceDBContext dbContext)
         {
-            this.dBContext = dBContext;
+            this.dbContext = dbContext;
         }
+
         public async Task<ShoppingCart> CreateAsync(ShoppingCart shoppingCart)
         {
-            await dBContext.ShoppingCarts.AddAsync(shoppingCart);
-            await dBContext.SaveChangesAsync();
+            await dbContext.ShoppingCarts.AddAsync(shoppingCart);
+            await dbContext.SaveChangesAsync();
             return shoppingCart;
         }
 
         public async Task<ShoppingCart?> DeleteAsync(Guid id)
         {
-           var shoppingCart=await dBContext.ShoppingCarts.FirstOrDefaultAsync(s=>s.Id==id);
-            if (shoppingCart==null)
+            var shoppingCart = await dbContext.ShoppingCarts
+                .Include(s => s.Items)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (shoppingCart == null)
                 return null;
-            dBContext.ShoppingCarts.Remove(shoppingCart);
-            await dBContext.SaveChangesAsync();
+
+            dbContext.ShoppingCarts.Remove(shoppingCart);
+            await dbContext.SaveChangesAsync();
             return shoppingCart;
         }
 
         public async Task<ShoppingCart?> GetCartByCustomerIdAsync(string customerId)
         {
-            return await dBContext.ShoppingCarts.FirstOrDefaultAsync(x=>x.CustomerId==customerId);
+            return await dbContext.ShoppingCarts
+                .Include(x => x.Items)
+                .ThenInclude(i => i.Stock)
+                .ThenInclude(s => s.Product)
+                .FirstOrDefaultAsync(x => x.CustomerId == customerId);
         }
 
         public async Task<ShoppingCart?> GetCartByID(Guid id)
         {
-            return await dBContext.ShoppingCarts.FirstOrDefaultAsync(x => x.Id == id);
+            return await dbContext.ShoppingCarts
+                .Include(x => x.Items)
+                .ThenInclude(i => i.Stock)
+                .ThenInclude(s => s.Product)
+                .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<ShoppingCart> GetOrCreateAsync(string customerId)
+        {
+            var cart = await dbContext.ShoppingCarts
+                .Include(x => x.Items)
+                .ThenInclude(i => i.Stock)
+                .ThenInclude(s => s.Product)
+                .FirstOrDefaultAsync(x => x.CustomerId == customerId);
+
+            if (cart != null)
+                return cart;
+
+            cart = new ShoppingCart
+            {
+                CustomerId = customerId,
+                Items = new List<ShoppingCartItem>()
+            };
+
+            await dbContext.ShoppingCarts.AddAsync(cart);
+            await dbContext.SaveChangesAsync();
+
+            return cart;
         }
     }
 }

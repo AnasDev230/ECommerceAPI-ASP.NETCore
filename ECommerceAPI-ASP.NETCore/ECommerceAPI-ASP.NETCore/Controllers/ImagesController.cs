@@ -1,5 +1,4 @@
-﻿using Blog_API.Models.DTO;
-using Blog_API.Repositories.Interface;
+﻿using ECommerceAPI_ASP.NETCore.Models.DTO;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -32,7 +31,7 @@ var Image = new Models.Domain.Image
                     Title = file.FileName,
                     CreatedAt = DateTime.UtcNow,
                 };
-                Image = await imageRepository.Upload(file, Image);
+                Image = await imageRepository.UploadAsync(file, Image);
                 ImageDto response = new ImageDto
                 {
                     ID = Image.Id,
@@ -51,7 +50,7 @@ var Image = new Models.Domain.Image
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
-            var images = await imageRepository.GetAll();
+            var images = await imageRepository.GetAllAsync();
             var response = new List<ImageDto>();
             foreach (var Image in images)
             {
@@ -72,7 +71,7 @@ ID = Image.Id,
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> DeleteImage(Guid ID)
         {
-            var image = await imageRepository.DeleteImage(ID);
+            var image = await imageRepository.DeleteAsync(ID);
             if (image == null)
                 return NotFound();
 var response = new ImageDto

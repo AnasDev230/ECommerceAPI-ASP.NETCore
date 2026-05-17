@@ -83,6 +83,35 @@ All entities inherit from `BaseEntity`:
 - Shipping: OrderId (unique), Status, TrackingNumber
 - AuditLog: EntityType, EntityId, Action, CreatedAt
 
+## Repository Layer
+
+### Existing Repositories
+| Repository | Interface | Implementation | Status |
+|------------|-----------|----------------|--------|
+| Product | `IProductRepository` | `ProductRepository` | Phase 1: Fixing `GetAllStockAsync()` and adding `.Include()` for navigation properties |
+| Category | `ICategoryRepository` | `CategoryRepository` | Phase 1: Fixing namespace (`Blog_API` → `ECommerceAPI_ASP.NETCore`), adding `.Include()` for Products, SubCategories, ParentCategory |
+| Stock | `IStockRepository` | `StockRepository` | Phase 1: Adding `.Include()` for Product, Image; Adding `GetAllStocksAsync()` |
+| Order | `IOrderRepository` | `OrderRepository` | Phase 1: Adding `.Include()` for Payment, Shipping, BillingAddress; Fixing null check bug in `UpdateOrderStatusAsync` |
+| Image | `IImageRepository` | `ImageRepository` | Phase 1: Fixing namespace (`Blog_API` → `ECommerceAPI_ASP.NETCore`) |
+| Rating | `IRatingRepository` | `RatingRepository` | Phase 1: Adding `.Include()` for Product, Customer |
+| ShoppingCart | `IShoppingCartRepository` | `ShoppingCartRepository` | Phase 1: Adding `.Include()` for Items, Stock, Product |
+| ShoppingCartItem | `IShoppingCartItemRepository` | `ShoppingCartItemRepository` | Phase 1: Adding `.Include()` for Stock, Product; Enabling stock validation |
+| Token | `ITokenRepository` | `TokenRepository` | Phase 1: Renaming `TokenRepoistory` → `TokenRepository`, fixing namespace |
+
+### Missing Repositories (Phase 2)
+- **Address** - `IAddressRepository` / `AddressRepository`
+- **Payment** - `IPaymentRepository` / `PaymentRepository`
+- **Shipping** - `IShippingRepository` / `ShippingRepository`
+- **AuditLog** - `IAuditLogRepository` / `AuditLogRepository`
+
+### Repository Standards
+- All repositories use dependency injection with `EcommerceDBContext`
+- Async/await pattern for all database operations
+- Navigation properties loaded via `.Include()` and `.ThenInclude()`
+- Transactions used for multi-entity operations (e.g., Order creation)
+- Null checks before update/delete operations
+- Namespace convention: `ECommerceAPI_ASP.NETCore.Repositories.Interface` and `ECommerceAPI_ASP.NETCore.Repositories.Implementation`
+
 ## Key Configuration (Program.cs)
 
 ```csharp

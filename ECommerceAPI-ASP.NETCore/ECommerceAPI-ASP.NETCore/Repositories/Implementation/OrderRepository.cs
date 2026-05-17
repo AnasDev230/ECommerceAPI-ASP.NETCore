@@ -7,97 +7,151 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 {
     public class OrderRepository : IOrderRepository
     {
-        private readonly EcommerceDBContext dBContext;
-        public OrderRepository(EcommerceDBContext dBContext)
+        private readonly EcommerceDBContext dbContext;
+
+        public OrderRepository(EcommerceDBContext dbContext)
         {
-            this.dBContext = dBContext;
+            this.dbContext = dbContext;
         }
-        public async Task<Order> CreateOrderAsync(string customerID)
+
+        public async Task<Order> CreateOrderFromCartAsync(string customerId)
         {
-            using var transaction = await dBContext.Database.BeginTransactionAsync();
-            var cart = await dBContext.ShoppingCarts.Include(c=>c.Items).ThenInclude(i=>i.Stock).ThenInclude(s => s.Product).FirstOrDefaultAsync(c=>c.CustomerId==customerID);
-            if (cart == null || !cart.Items.Any())
-                throw new Exception("Cart is empty.");
-            var order = new Order
+            await using var transaction = await dbContext.Database.BeginTransactionAsync();
+            try
             {
-                CustomerId = customerID,
-                CreatedAt = DateTime.Now,
-                Status=OrderStatus.Pending,
-                Items=new List<OrderItem>()
-            };
+                var cart = await dbContext.ShoppingCarts
+                    .Include(c => c.Items)
+                    .ThenInclude(i => i.Stock)
+                    .ThenInclude(s => s.Product)
+                    .FirstOrDefaultAsync(c => c.CustomerId == customerId);
 
-            foreach (var cartItem in cart.Items)
-            {
-                if(cartItem.Stock.Quantity<cartItem.Quantity)
-                    throw new Exception($"Insufficient stock for {cartItem.Stock.Product.Name}");
+                if (cart == null || !cart.Items.Any())
+                    throw new InvalidOperationException("Cart is empty.");
 
-                var orderItem = new OrderItem
+                var order = new Order
                 {
-                    OrderId=order.Id,
-                    StockId=cartItem.StockId,
-                    Quantity=cartItem.Quantity,
-                    UnitPrice=cartItem.Stock.Price,
+                    CustomerId = customerId,
+                    CreatedAt = DateTime.UtcNow,
+                    Status = OrderStatus.Pending,
+                    Items = new List<OrderItem>()
                 };
-                orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
-                order.Items.Add(orderItem);
-                order.TotalAmount += orderItem.UnitPrice * orderItem.Quantity;
-                cartItem.Stock.Quantity-=orderItem.Quantity;
-            }
-            await dBContext.Orders.AddAsync(order);
-            dBContext.ShoppingCartItems.RemoveRange(cart.Items);
-            dBContext.ShoppingCarts.Remove(cart);
-            await dBContext.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return order;
 
+                foreach (var cartItem in cart.Items)
+                {
+                    if (cartItem.Stock == null)
+                        throw new InvalidOperationException($"Stock not found for cart item.");
+                    if (cartItem.Stock.Quantity < cartItem.Quantity)
+                        throw new InvalidOperationException($"Insufficient stock for {cartItem.Stock.Product?.Name}.");
+
+                    var orderItem = new OrderItem
+                    {
+                        StockId = cartItem.StockId,
+                        Quantity = cartItem.Quantity,
+                        UnitPrice = cartItem.Stock.Price,
+                    };
+                    orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
+                    order.Items.Add(orderItem);
+                    order.TotalAmount += orderItem.TotalPrice;
+
+                    cartItem.Stock.Quantity -= cartItem.Quantity;
+                }
+
+                await dbContext.Orders.AddAsync(order);
+                dbContext.ShoppingCartItems.RemoveRange(cart.Items);
+                dbContext.ShoppingCarts.Remove(cart);
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return order;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<bool> DeleteOrderAsync(Guid id)
         {
-            using var transaction = await dBContext.Database.BeginTransactionAsync();
-            var order = await dBContext.Orders.Include(o => o.Items).FirstOrDefaultAsync(x=>x.Id==id);
-            if (order == null)
-                return false;
-
-            foreach (var item in order.Items)
+            await using var transaction = await dbContext.Database.BeginTransactionAsync();
+            try
             {
-                item.Stock.Quantity += item.Quantity;
+                var order = await dbContext.Orders
+                    .Include(o => o.Items)
+                    .ThenInclude(oi => oi.Stock)
+                    .FirstOrDefaultAsync(o => o.Id == id);
+
+                if (order == null)
+                    return false;
+
+                foreach (var item in order.Items)
+                {
+                    if (item.Stock != null)
+                        item.Stock.Quantity += item.Quantity;
+                }
+
+                dbContext.Orders.Remove(order);
+                await dbContext.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
             }
-            dBContext.Orders.Remove(order);
-            dBContext.OrderItems.RemoveRange(order.Items);
-            
-            await dBContext.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return true;
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<IEnumerable<Order>> GetAllOrdersAsync()
         {
-            return await dBContext.Orders.Include(o => o.Items).ToListAsync();
+            return await dbContext.Orders
+                .Include(o => o.Items)
+                .ThenInclude(oi => oi.Stock)
+                .Include(o => o.Payment)
+                .Include(o => o.Shipping)
+                .Include(o => o.BillingAddress)
+                .ToListAsync();
         }
 
         public async Task<Order?> GetOrderByIdAsync(Guid id)
         {
-            return await dBContext.Orders.Include(o => o.Items).ThenInclude(oi => oi.Stock).FirstOrDefaultAsync(o => o.Id == id);
+            return await dbContext.Orders
+                .Include(o => o.Items)
+                .ThenInclude(oi => oi.Stock)
+                .ThenInclude(s => s.Product)
+                .Include(o => o.Payment)
+                .Include(o => o.Shipping)
+                .Include(o => o.BillingAddress)
+                .FirstOrDefaultAsync(o => o.Id == id);
         }
 
         public async Task<IEnumerable<Order>> GetOrdersByCustomerIdAsync(string customerId)
         {
-            return await dBContext.Orders.Where(o=>o.CustomerId==customerId).ToListAsync();
+            return await dbContext.Orders
+                .Where(o => o.CustomerId == customerId)
+                .Include(o => o.Items)
+                .ThenInclude(oi => oi.Stock)
+                .Include(o => o.Payment)
+                .Include(o => o.Shipping)
+                .ToListAsync();
         }
 
-        public async Task<Order> UpdateOrderStatusAsync(Order order)
+        public async Task<Order?> UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus)
         {
-            var existingOrder = await dBContext.Orders.FindAsync(order.Id);
+            var existingOrder = await dbContext.Orders.FindAsync(orderId);
+            if (existingOrder == null)
+                return null;
+
             if (existingOrder.Status is OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
                 return null;
-            if (existingOrder != null)
-            {
-                dBContext.Entry(existingOrder).CurrentValues.SetValues(order);
-                await dBContext.SaveChangesAsync();
-                return order;
-            }
-            return null;   
+
+            existingOrder.Status = newStatus;
+            existingOrder.UpdatedAt = DateTime.UtcNow;
+
+            if (newStatus == OrderStatus.Delivered)
+                existingOrder.CompletedAt = DateTime.UtcNow;
+
+            await dbContext.SaveChangesAsync();
+            return existingOrder;
         }
     }
 }

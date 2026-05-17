@@ -1,60 +1,92 @@
-﻿using Blog_API.Repositories.Interface;
-using ECommerceAPI_ASP.NETCore.Data;
+﻿using ECommerceAPI_ASP.NETCore.Data;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
-using Microsoft.AspNetCore.Mvc;
+using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog_API.Repositories.Implementation
+namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 {
     public class CategoryRepository : ICategoryRepository
     {
-        private readonly EcommerceDBContext dBContext;
+        private readonly EcommerceDBContext dbContext;
 
-        public CategoryRepository(EcommerceDBContext dBContext)
+        public CategoryRepository(EcommerceDBContext dbContext)
         {
-            this.dBContext = dBContext;
+            this.dbContext = dbContext;
         }
+
         public async Task<Category> CreateAsync(Category category)
         {
-            await dBContext.Categories.AddAsync(category);
-            await dBContext.SaveChangesAsync();
+            await dbContext.Categories.AddAsync(category);
+            await dbContext.SaveChangesAsync();
             return category;
         }
 
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
-            return await dBContext.Categories.ToListAsync();
-            
+            return await dbContext.Categories
+                .Include(c => c.ParentCategory)
+                .Include(c => c.SubCategories)
+                .Include(c => c.Image)
+                .ToListAsync();
         }
 
-        public async Task<Category> GetByID(Guid ID)
+        public async Task<Category?> GetByID(Guid id)
         {
-            return await dBContext.Categories.FirstOrDefaultAsync(x => x.Id == ID);
+            return await dbContext.Categories
+                .Include(c => c.ParentCategory)
+                .Include(c => c.SubCategories)
+                .Include(c => c.Products)
+                .Include(c => c.Image)
+                .FirstOrDefaultAsync(x => x.Id == id);
         }
-        
 
         public async Task<Category?> UpdateAsync(Category category)
         {
-           Category existingCategory= await dBContext.Categories.FirstOrDefaultAsync(x=>x.Id == category.Id);
-            if (existingCategory != null)
-            {
-                 dBContext.Entry(existingCategory).CurrentValues.SetValues(category);
-                await dBContext.SaveChangesAsync();
-                return category;
-            }
-            return null;
-        }
-        public async Task<Category> DeleteAsync(Guid ID)
-        {
-            Category category= await dBContext.Categories.FirstOrDefaultAsync(x=>x.Id == ID);
-            if (category is null) {
+            var existingCategory = await dbContext.Categories.FirstOrDefaultAsync(x => x.Id == category.Id);
+            if (existingCategory == null)
                 return null;
-            }
-            dBContext.Categories.Remove(category);
-            await dBContext.SaveChangesAsync();
+
+            existingCategory.Name = category.Name;
+            existingCategory.Description = category.Description;
+            existingCategory.DisplayOrder = category.DisplayOrder;
+            existingCategory.IsActive = category.IsActive;
+            existingCategory.ImageID = category.ImageID;
+            existingCategory.ParentCategoryId = category.ParentCategoryId;
+            existingCategory.UpdatedAt = DateTime.UtcNow;
+
+            await dbContext.SaveChangesAsync();
+            return existingCategory;
+        }
+
+        public async Task<Category?> DeleteAsync(Guid id)
+        {
+            var category = await dbContext.Categories
+                .Include(c => c.SubCategories)
+                .Include(c => c.Products)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (category is null)
+                return null;
+
+            if (category.SubCategories.Any())
+                throw new InvalidOperationException("Cannot delete category with subcategories.");
+
+            if (category.Products.Any())
+                throw new InvalidOperationException("Cannot delete category with products.");
+
+            dbContext.Categories.Remove(category);
+            await dbContext.SaveChangesAsync();
             return category;
         }
 
-        
+        public async Task<bool> HasSubCategoriesAsync(Guid categoryId)
+        {
+            return await dbContext.Categories.AnyAsync(c => c.ParentCategoryId == categoryId);
+        }
+
+        public async Task<bool> HasProductsAsync(Guid categoryId)
+        {
+            return await dbContext.Products.AnyAsync(p => p.CategoryId == categoryId);
+        }
     }
 }

@@ -8,6 +8,6 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<ShoppingCartItem?> GetByIdAsync(Guid id);
         Task<IEnumerable<ShoppingCartItem>> GetItemsByCartIdAsync(Guid cartId);
         Task<ShoppingCartItem?> UpdateQuantityAsync(Guid id, int quantity);
-        Task<ShoppingCartItem> DeleteAsync(Guid id);
+        Task<ShoppingCartItem?> DeleteAsync(Guid id);
     }
 }

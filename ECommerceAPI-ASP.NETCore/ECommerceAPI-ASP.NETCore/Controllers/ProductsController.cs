@@ -1,10 +1,9 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
-using Blog_API.Repositories.Implementation;
-using Blog_API.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
+using ECommerceAPI_ASP.NETCore.Repositories.Implementation;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;

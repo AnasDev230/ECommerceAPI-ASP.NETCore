@@ -1,7 +1,6 @@
 ﻿using ECommerceAPI_ASP.NETCore.Models.Domain;
-using Microsoft.AspNetCore.Mvc;
 
-namespace Blog_API.Repositories.Interface
+namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
 {
     public interface ICategoryRepository
     {
@@ -10,5 +9,7 @@ namespace Blog_API.Repositories.Interface
         Task<Category?> GetByID(Guid id);
         Task<Category?> UpdateAsync(Category category);
         Task<Category?> DeleteAsync(Guid id);
+        Task<bool> HasSubCategoriesAsync(Guid categoryId);
+        Task<bool> HasProductsAsync(Guid categoryId);
     }
 }
