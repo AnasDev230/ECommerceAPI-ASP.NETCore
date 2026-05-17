@@ -1,20 +1,24 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace ECommerceAPI_ASP.NETCore.Models.Domain
 {
-    public class Rating
+    public class Rating : BaseEntity
     {
-        public Guid Id { get; set; }
-
+        [Required]
         public Guid ProductId { get; set; }
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
 
-        public string CustomerId { get; set; }
-        public IdentityUser Customer { get; set; }
+        [Required]
+        public string CustomerId { get; set; } = string.Empty;
+        public IdentityUser? Customer { get; set; }
 
+        [Range(1, 5)]
         public int Stars { get; set; }
+
+        [MaxLength(2000)]
         public string? Comment { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsVerifiedPurchase { get; set; } = false;
     }
 }

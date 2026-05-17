@@ -25,21 +25,21 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             ValidateFileUpload(file);
             if (ModelState.IsValid)
             {
-                var Image = new Models.Domain.Image
+var Image = new Models.Domain.Image
                 {
                     FileExtension = Path.GetExtension(file.FileName).ToLower(),
                     FileName = Path.GetFileNameWithoutExtension(file.FileName),
                     Title = file.FileName,
-                    DateCreated = DateTime.Now,
+                    CreatedAt = DateTime.UtcNow,
                 };
                 Image = await imageRepository.Upload(file, Image);
                 ImageDto response = new ImageDto
                 {
-                    ID = Image.ID,
+                    ID = Image.Id,
                     FileExtension = Image.FileExtension,
                     FileName = Image.FileName,
                     Title = Image.Title,
-                    DateCreated = DateTime.Now,
+                    DateCreated = DateTime.UtcNow,
                     Url = Image.Url
                 };
                 return Ok(response);
@@ -57,11 +57,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             {
                 response.Add(new ImageDto
                 {
-                    ID = Image.ID,
+ID = Image.Id,
                     FileExtension = Image.FileExtension,
                     FileName = Image.FileName,
                     Title = Image.Title,
-                    DateCreated = Image.DateCreated,
+                    DateCreated = Image.CreatedAt,
                     Url = Image.Url
                 });
             }
@@ -75,13 +75,13 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             var image = await imageRepository.DeleteImage(ID);
             if (image == null)
                 return NotFound();
-            var response = new ImageDto
+var response = new ImageDto
             {
-                ID = image.ID,
+                ID = image.Id,
                 FileExtension = image.FileExtension,
                 FileName = image.FileName,
                 Title = image.Title,
-                DateCreated = image.DateCreated,
+                DateCreated = image.CreatedAt,
                 Url = image.Url
             };
             return Ok(response);
@@ -96,11 +96,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                 return NotFound();
             var response = new ImageDto
             {
-                ID = image.ID,
+                ID = image.Id,
                 FileExtension = image.FileExtension,
                 FileName = image.FileName,
                 Title = image.Title,
-                DateCreated = image.DateCreated,
+                DateCreated = image.CreatedAt,
                 Url = image.Url
             };
             return Ok(response);

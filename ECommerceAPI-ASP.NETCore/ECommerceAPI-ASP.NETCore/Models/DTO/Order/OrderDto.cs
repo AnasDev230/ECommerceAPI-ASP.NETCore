@@ -1,4 +1,5 @@
 ﻿using ECommerceAPI_ASP.NETCore.Models.DTO.Order.OrderItem;
+using ECommerceAPI_ASP.NETCore.Models.Domain;
 
 namespace ECommerceAPI_ASP.NETCore.Models.DTO.Order
 {
@@ -8,7 +9,7 @@ namespace ECommerceAPI_ASP.NETCore.Models.DTO.Order
         public string CustomerId { get; set; }
         public DateTime CreatedAt { get; set; }
         public decimal TotalAmount { get; set; }
-        public string Status { get; set; }
+        public OrderStatus Status { get; set; }
         public ICollection<OrderItemDto> Items { get; set; }
     }
 }

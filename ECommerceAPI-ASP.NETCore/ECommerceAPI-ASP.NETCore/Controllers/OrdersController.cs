@@ -89,13 +89,13 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         }
 
         [HttpPut("{orderId}")]
-        [Authorize(Roles = "Customer")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus([FromRoute] Guid orderId, [FromBody] UpdateOrderStatusRequestDto request)
         {
             var order = await orderRepository.GetOrderByIdAsync(orderId);
             if (order == null)
                 return NotFound();
-            if(request.Status is "Pending" or "Paid" or "Shipped" or "Completed" or "Cancelled")
+if(request.Status is OrderStatus.Pending or OrderStatus.Paid or OrderStatus.Processing or OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
             {
                 order.Status = request.Status;
                 order = await orderRepository.UpdateOrderStatusAsync(order);

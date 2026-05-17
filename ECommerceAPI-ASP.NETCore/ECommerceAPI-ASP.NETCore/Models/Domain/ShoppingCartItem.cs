@@ -1,15 +1,18 @@
-﻿namespace ECommerceAPI_ASP.NETCore.Models.Domain
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ECommerceAPI_ASP.NETCore.Models.Domain
 {
-    public class ShoppingCartItem
+    public class ShoppingCartItem : BaseEntity
     {
-        public Guid Id { get; set; }
-
+        [Required]
         public Guid ShoppingCartId { get; set; }
-        public ShoppingCart ShoppingCart { get; set; }
+        public ShoppingCart? ShoppingCart { get; set; }
 
+        [Required]
         public Guid StockId { get; set; }
-        public Stock Stock { get; set; }
+        public Stock? Stock { get; set; }
 
+        [Range(1, int.MaxValue)]
         public int Quantity { get; set; }
     }
 }

@@ -1,21 +1,40 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace ECommerceAPI_ASP.NETCore.Models.Domain
 {
-    public class Order
+    public enum OrderStatus
     {
-        public Guid Id { get; set; }
+        Pending = 0,
+        Paid = 1,
+        Processing = 2,
+        Shipped = 3,
+        Delivered = 4,
+        Cancelled = 5
+    }
 
-        public string CustomerId { get; set; }
-        public IdentityUser Customer { get; set; }
+    public class Order : BaseEntity
+    {
+        [Required]
+        public string CustomerId { get; set; } = string.Empty;
+        public IdentityUser? Customer { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? CompletedAt { get; set; }
 
+        [Range(0, 999999.99)]
         public decimal TotalAmount { get; set; }
 
-        public string Status { get; set; } = "Pending";
-        // Pending, Paid, Shipped, Completed, Cancelled
+        public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
-        public ICollection<OrderItem> Items { get; set; }
+        [MaxLength(1000)]
+        public string? Notes { get; set; }
+
+        public Guid? BillingAddressId { get; set; }
+        public Address? BillingAddress { get; set; }
+
+        public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+
+        public Payment? Payment { get; set; }
+        public Shipping? Shipping { get; set; }
     }
 }

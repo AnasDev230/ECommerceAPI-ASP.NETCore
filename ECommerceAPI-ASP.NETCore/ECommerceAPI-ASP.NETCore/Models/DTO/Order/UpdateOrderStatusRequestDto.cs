@@ -1,7 +1,9 @@
-﻿namespace ECommerceAPI_ASP.NETCore.Models.DTO.Order
+﻿using ECommerceAPI_ASP.NETCore.Models.Domain;
+
+namespace ECommerceAPI_ASP.NETCore.Models.DTO.Order
 {
     public class UpdateOrderStatusRequestDto
     {
-        public string Status { get; set; }
+        public OrderStatus Status { get; set; }
     }
 }

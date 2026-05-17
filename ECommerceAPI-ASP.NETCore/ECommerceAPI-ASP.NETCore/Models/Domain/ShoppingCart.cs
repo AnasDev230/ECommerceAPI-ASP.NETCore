@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace ECommerceAPI_ASP.NETCore.Models.Domain
 {
-    public class ShoppingCart
+    public class ShoppingCart : BaseEntity
     {
-        public Guid Id { get; set; }
-        public string CustomerId { get; set; }
-        public IdentityUser Customer { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public ICollection<ShoppingCartItem> Items { get; set; }
+        [Required]
+        public string CustomerId { get; set; } = string.Empty;
+        public IdentityUser? Customer { get; set; }
+
+        public new DateTime? UpdatedAt { get; set; }
+
+        public ICollection<ShoppingCartItem> Items { get; set; } = new List<ShoppingCartItem>();
     }
 }

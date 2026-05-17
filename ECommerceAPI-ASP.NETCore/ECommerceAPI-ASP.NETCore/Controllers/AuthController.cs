@@ -21,7 +21,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
         }
-
+        /// <summary>
+        /// jofnjwenfnwjenfnwefwejnfijewn
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Register")]
         [ProducesResponseType(StatusCodes.Status200OK)]

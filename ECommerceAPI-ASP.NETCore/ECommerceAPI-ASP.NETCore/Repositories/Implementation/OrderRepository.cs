@@ -22,7 +22,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             {
                 CustomerId = customerID,
                 CreatedAt = DateTime.Now,
-                Status="Pending",
+                Status=OrderStatus.Pending,
                 Items=new List<OrderItem>()
             };
 
@@ -89,7 +89,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Order> UpdateOrderStatusAsync(Order order)
         {
             var existingOrder = await dBContext.Orders.FindAsync(order.Id);
-            if (existingOrder.Status is "Shipped" or "Completed" or "Cancelled")
+            if (existingOrder.Status is OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
                 return null;
             if (existingOrder != null)
             {
