@@ -71,10 +71,13 @@ ID = Image.Id,
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> DeleteImage(Guid ID)
         {
-            var image = await imageRepository.DeleteAsync(ID);
+            var image = await imageRepository.GetByID(ID);
             if (image == null)
                 return NotFound();
-var response = new ImageDto
+            var deleted = await imageRepository.DeleteAsync(ID);
+            if (!deleted)
+                return NotFound();
+            var response = new ImageDto
             {
                 ID = image.Id,
                 FileExtension = image.FileExtension,

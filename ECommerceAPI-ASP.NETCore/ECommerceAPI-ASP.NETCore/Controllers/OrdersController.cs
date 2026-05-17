@@ -97,9 +97,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                 return NotFound();
 if(request.Status is OrderStatus.Pending or OrderStatus.Paid or OrderStatus.Processing or OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
             {
-                order.Status = request.Status;
-                order = await orderRepository.UpdateOrderStatusAsync(orderId, request.Status);
-                return Ok(mapper.Map<OrderDto>(order));
+                var updated = await orderRepository.UpdateOrderStatusAsync(orderId, request.Status);
+                if (!updated)
+                    return BadRequest("Order status cannot be updated.");
+                var updatedOrder = await orderRepository.GetOrderByIdAsync(orderId);
+                return Ok(mapper.Map<OrderDto>(updatedOrder));
             }
 
             return BadRequest("Incorrect Status!!");

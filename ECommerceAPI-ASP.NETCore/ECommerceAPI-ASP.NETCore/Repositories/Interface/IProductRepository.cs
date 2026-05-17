@@ -8,7 +8,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<IEnumerable<Product>> GetAllAsync();
         Task<IEnumerable<Product>> GetAllProductsByCategoryID(Guid categoryId);
         Task<Product?> GetByID(Guid id);
-        Task<Product?> UpdateAsync(Product product);
+        Task<bool> UpdateAsync(Product product);
         Task<Product?> DeleteAsync(Guid id);
     }
 }

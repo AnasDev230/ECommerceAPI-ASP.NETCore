@@ -104,6 +104,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Order>> GetAllOrdersAsync()
         {
             return await dbContext.Orders
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(o => o.Items)
                 .ThenInclude(oi => oi.Stock)
                 .Include(o => o.Payment)
@@ -115,6 +117,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Order?> GetOrderByIdAsync(Guid id)
         {
             return await dbContext.Orders
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(o => o.Items)
                 .ThenInclude(oi => oi.Stock)
                 .ThenInclude(s => s.Product)
@@ -127,6 +131,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Order>> GetOrdersByCustomerIdAsync(string customerId)
         {
             return await dbContext.Orders
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Where(o => o.CustomerId == customerId)
                 .Include(o => o.Items)
                 .ThenInclude(oi => oi.Stock)
@@ -135,23 +141,23 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                 .ToListAsync();
         }
 
-        public async Task<Order?> UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus)
+        public async Task<bool> UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus)
         {
-            var existingOrder = await dbContext.Orders.FindAsync(orderId);
-            if (existingOrder == null)
-                return null;
+            var order = await dbContext.Orders.FindAsync(orderId);
+            if (order == null)
+                return false;
 
-            if (existingOrder.Status is OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
-                return null;
+            if (order.Status is OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
+                return false;
 
-            existingOrder.Status = newStatus;
-            existingOrder.UpdatedAt = DateTime.UtcNow;
+            var rowsAffected = await dbContext.Orders
+                .Where(o => o.Id == orderId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(o => o.Status, newStatus)
+                    .SetProperty(o => o.UpdatedAt, DateTime.UtcNow)
+                    .SetProperty(o => o.CompletedAt, newStatus == OrderStatus.Delivered ? DateTime.UtcNow : order.CompletedAt));
 
-            if (newStatus == OrderStatus.Delivered)
-                existingOrder.CompletedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingOrder;
+            return rowsAffected > 0;
         }
     }
 }

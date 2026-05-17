@@ -38,6 +38,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<ShoppingCart?> GetCartByCustomerIdAsync(string customerId)
         {
             return await dbContext.ShoppingCarts
+                .AsNoTracking()
                 .Include(x => x.Items)
                 .ThenInclude(i => i.Stock)
                 .ThenInclude(s => s.Product)
@@ -47,6 +48,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<ShoppingCart?> GetCartByID(Guid id)
         {
             return await dbContext.ShoppingCarts
+                .AsNoTracking()
                 .Include(x => x.Items)
                 .ThenInclude(i => i.Stock)
                 .ThenInclude(s => s.Product)
@@ -56,6 +58,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<ShoppingCart> GetOrCreateAsync(string customerId)
         {
             var cart = await dbContext.ShoppingCarts
+                .AsNoTracking()
                 .Include(x => x.Items)
                 .ThenInclude(i => i.Stock)
                 .ThenInclude(s => s.Product)

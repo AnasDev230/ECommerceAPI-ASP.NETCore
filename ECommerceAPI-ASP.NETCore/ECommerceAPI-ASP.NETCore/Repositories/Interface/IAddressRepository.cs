@@ -8,8 +8,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<IEnumerable<Address>> GetAllByUserIdAsync(string userId);
         Task<Address?> GetByIdAsync(Guid id);
         Task<Address?> GetDefaultByUserIdAsync(string userId);
-        Task<Address?> UpdateAsync(Address address);
-        Task<Address?> DeleteAsync(Guid id);
-        Task<Address?> SetDefaultAsync(Guid addressId, string userId);
+        Task<bool> UpdateAsync(Address address);
+        Task<bool> DeleteAsync(Guid id);
+        Task<bool> SetDefaultAsync(Guid addressId, string userId);
     }
 }

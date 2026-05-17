@@ -80,8 +80,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (product == null)
                 return NotFound();
             mapper.Map(updateProductRequestDto, product);
-            product = await productRepository.UpdateAsync(product);
-            return Ok(mapper.Map<ProductDto>(product));
+            var updated = await productRepository.UpdateAsync(product);
+            if (!updated)
+                return NotFound();
+            var updatedProduct = await productRepository.GetByID(ID);
+            return Ok(mapper.Map<ProductDto>(updatedProduct));
         }
         [HttpDelete]
         [Route("{ID:Guid}")]

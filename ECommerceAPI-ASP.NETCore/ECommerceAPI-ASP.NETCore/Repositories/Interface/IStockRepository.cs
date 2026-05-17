@@ -8,8 +8,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<IEnumerable<Stock>> GetAllStocksAsync();
         Task<IEnumerable<Stock>> GetAllByProductIdAsync(Guid productId);
         Task<Stock?> GetByID(Guid id);
-        Task<Stock?> UpdateAsync(Stock stock);
-        Task<Stock?> DeleteAsync(Guid id);
+        Task<bool> UpdateAsync(Stock stock);
+        Task<bool> DeleteAsync(Guid id);
         Task<bool> IsUsedInCartAsync(Guid stockId);
     }
 }

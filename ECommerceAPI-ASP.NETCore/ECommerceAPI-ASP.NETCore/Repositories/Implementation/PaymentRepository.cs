@@ -21,20 +21,19 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return payment;
         }
 
-        public async Task<Payment?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            var payment = await dbContext.Payments.FindAsync(id);
-            if (payment == null)
-                return null;
+            var rowsAffected = await dbContext.Payments
+                .Where(p => p.Id == id)
+                .ExecuteDeleteAsync();
 
-            dbContext.Payments.Remove(payment);
-            await dbContext.SaveChangesAsync();
-            return payment;
+            return rowsAffected > 0;
         }
 
         public async Task<IEnumerable<Payment>> GetAllAsync()
         {
             return await dbContext.Payments
+                .AsNoTracking()
                 .Include(p => p.Order)
                 .ToListAsync();
         }
@@ -42,6 +41,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Payment?> GetByIdAsync(Guid id)
         {
             return await dbContext.Payments
+                .AsNoTracking()
                 .Include(p => p.Order)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
@@ -49,6 +49,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Payment?> GetByOrderIdAsync(Guid orderId)
         {
             return await dbContext.Payments
+                .AsNoTracking()
                 .Include(p => p.Order)
                 .FirstOrDefaultAsync(p => p.OrderId == orderId);
         }
@@ -56,44 +57,50 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Payment>> GetByStatusAsync(PaymentStatus status)
         {
             return await dbContext.Payments
+                .AsNoTracking()
                 .Include(p => p.Order)
                 .Where(p => p.Status == status)
                 .ToListAsync();
         }
 
-        public async Task<Payment?> UpdateAsync(Payment payment)
+        public async Task<bool> UpdateAsync(Payment payment)
         {
-            var existingPayment = await dbContext.Payments.FirstOrDefaultAsync(p => p.Id == payment.Id);
-            if (existingPayment == null)
-                return null;
+            var rowsAffected = await dbContext.Payments
+                .Where(p => p.Id == payment.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.Method, payment.Method)
+                    .SetProperty(p => p.Amount, payment.Amount)
+                    .SetProperty(p => p.TransactionId, payment.TransactionId)
+                    .SetProperty(p => p.TransactionDetails, payment.TransactionDetails)
+                    .SetProperty(p => p.Status, payment.Status)
+                    .SetProperty(p => p.ProcessedAt, payment.ProcessedAt)
+                    .SetProperty(p => p.FailureReason, payment.FailureReason)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
-            existingPayment.Method = payment.Method;
-            existingPayment.Amount = payment.Amount;
-            existingPayment.TransactionId = payment.TransactionId;
-            existingPayment.TransactionDetails = payment.TransactionDetails;
-            existingPayment.Status = payment.Status;
-            existingPayment.ProcessedAt = payment.ProcessedAt;
-            existingPayment.FailureReason = payment.FailureReason;
-            existingPayment.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingPayment;
+            return rowsAffected > 0;
         }
 
-        public async Task<Payment?> UpdateStatusAsync(Guid paymentId, PaymentStatus newStatus)
+        public async Task<bool> UpdateStatusAsync(Guid paymentId, PaymentStatus newStatus)
         {
-            var existingPayment = await dbContext.Payments.FindAsync(paymentId);
-            if (existingPayment == null)
-                return null;
-
-            existingPayment.Status = newStatus;
-            existingPayment.UpdatedAt = DateTime.UtcNow;
-
             if (newStatus == PaymentStatus.Completed)
-                existingPayment.ProcessedAt = DateTime.UtcNow;
+            {
+                var rowsAffected = await dbContext.Payments
+                    .Where(p => p.Id == paymentId)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(p => p.Status, newStatus)
+                        .SetProperty(p => p.UpdatedAt, DateTime.UtcNow)
+                        .SetProperty(p => p.ProcessedAt, DateTime.UtcNow));
 
-            await dbContext.SaveChangesAsync();
-            return existingPayment;
+                return rowsAffected > 0;
+            }
+
+            var rows = await dbContext.Payments
+                .Where(p => p.Id == paymentId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.Status, newStatus)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
+
+            return rows > 0;
         }
     }
 }

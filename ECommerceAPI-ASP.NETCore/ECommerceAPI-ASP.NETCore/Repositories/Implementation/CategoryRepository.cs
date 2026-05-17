@@ -24,6 +24,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Category>> GetAllAsync()
         {
             return await dbContext.Categories
+                .AsNoTracking()
                 .Include(c => c.ParentCategory)
                 .Include(c => c.SubCategories)
                 .Include(c => c.Image)
@@ -33,6 +34,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Category?> GetByID(Guid id)
         {
             return await dbContext.Categories
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(c => c.ParentCategory)
                 .Include(c => c.SubCategories)
                 .Include(c => c.Products)
@@ -40,22 +43,20 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<Category?> UpdateAsync(Category category)
+        public async Task<bool> UpdateAsync(Category category)
         {
-            var existingCategory = await dbContext.Categories.FirstOrDefaultAsync(x => x.Id == category.Id);
-            if (existingCategory == null)
-                return null;
+            var rowsAffected = await dbContext.Categories
+                .Where(c => c.Id == category.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(c => c.Name, category.Name)
+                    .SetProperty(c => c.Description, category.Description)
+                    .SetProperty(c => c.DisplayOrder, category.DisplayOrder)
+                    .SetProperty(c => c.IsActive, category.IsActive)
+                    .SetProperty(c => c.ImageID, category.ImageID)
+                    .SetProperty(c => c.ParentCategoryId, category.ParentCategoryId)
+                    .SetProperty(c => c.UpdatedAt, DateTime.UtcNow));
 
-            existingCategory.Name = category.Name;
-            existingCategory.Description = category.Description;
-            existingCategory.DisplayOrder = category.DisplayOrder;
-            existingCategory.IsActive = category.IsActive;
-            existingCategory.ImageID = category.ImageID;
-            existingCategory.ParentCategoryId = category.ParentCategoryId;
-            existingCategory.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingCategory;
+            return rowsAffected > 0;
         }
 
         public async Task<Category?> DeleteAsync(Guid id)

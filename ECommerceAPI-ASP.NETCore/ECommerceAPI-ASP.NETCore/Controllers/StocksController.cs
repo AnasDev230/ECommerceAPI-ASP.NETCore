@@ -72,8 +72,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (stock == null)
                 return NotFound();
             stock=mapper.Map(request,stock);
-            await stockRepository.UpdateAsync(stock);
-            return Ok(mapper.Map<StockDto>(stock));
+            var updated = await stockRepository.UpdateAsync(stock);
+            if (!updated)
+                return NotFound();
+            var updatedStock = await stockRepository.GetByID(StockID);
+            return Ok(mapper.Map<StockDto>(updatedStock));
         }
         [HttpDelete]
         [Route("{StockID:Guid}")]
@@ -85,8 +88,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             var stock = await stockRepository.GetByID(StockID);
             if (stock == null)
                 return NotFound();
-            stock = await stockRepository.DeleteAsync(StockID);
-            return Ok(mapper.Map<StockDto>(stock));
+            var deleted = await stockRepository.DeleteAsync(StockID);
+            if (!deleted)
+                return NotFound();
+            return Ok("Stock deleted successfully");
         }
     }
 }

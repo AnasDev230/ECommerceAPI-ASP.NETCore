@@ -12,7 +12,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         private readonly EcommerceDBContext dbContext;
 
         private static readonly HashSet<string> AllowedExtensions = new() { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-        private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
+        private const long MaxFileSize = 5 * 1024 * 1024;
 
         public ImageRepository(IWebHostEnvironment webHostEnvironment,
             IHttpContextAccessor httpContextAccessor, EcommerceDBContext dbContext)
@@ -22,29 +22,35 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             this.dbContext = dbContext;
         }
 
-        public async Task<Image?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             var image = await dbContext.Images.FindAsync(id);
             if (image == null)
-                return null;
+                return false;
 
             var filePath = Path.Combine(webHostEnvironment.ContentRootPath, "Images", image.FileName);
             if (File.Exists(filePath))
                 File.Delete(filePath);
 
-            dbContext.Images.Remove(image);
-            await dbContext.SaveChangesAsync();
-            return image;
+            var rowsAffected = await dbContext.Images
+                .Where(i => i.Id == id)
+                .ExecuteDeleteAsync();
+
+            return rowsAffected > 0;
         }
 
         public async Task<IEnumerable<Image>> GetAllAsync()
         {
-            return await dbContext.Images.ToListAsync();
+            return await dbContext.Images
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<Image?> GetByID(Guid id)
         {
-            return await dbContext.Images.FindAsync(id);
+            return await dbContext.Images
+                .AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Id == id);
         }
 
         public async Task<Image> UploadAsync(IFormFile file, Image image)

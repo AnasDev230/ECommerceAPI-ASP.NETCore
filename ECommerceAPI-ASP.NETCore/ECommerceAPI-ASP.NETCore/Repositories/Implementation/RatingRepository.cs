@@ -23,13 +23,11 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 
         public async Task<bool> DeleteRatingAsync(Guid ratingId)
         {
-            var rating = await dbContext.Ratings.FindAsync(ratingId);
-            if (rating == null)
-                return false;
+            var rowsAffected = await dbContext.Ratings
+                .Where(r => r.Id == ratingId)
+                .ExecuteDeleteAsync();
 
-            dbContext.Ratings.Remove(rating);
-            await dbContext.SaveChangesAsync();
-            return true;
+            return rowsAffected > 0;
         }
 
         public async Task<bool> ExistsAsync(Guid productId, string customerId)
@@ -40,33 +38,33 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Rating?> GetRatingAsync(Guid productId, string customerId)
         {
             return await dbContext.Ratings
+                .AsNoTracking()
                 .Include(r => r.Product)
                 .Include(r => r.Customer)
-                .FirstOrDefaultAsync(x => x.ProductId == productId && x.CustomerId == customerId);
+                .FirstOrDefaultAsync(r => r.ProductId == productId && r.CustomerId == customerId);
         }
 
         public async Task<IEnumerable<Rating>> GetRatingsByProductAsync(Guid productId)
         {
             return await dbContext.Ratings
-                .Where(x => x.ProductId == productId)
-                .Include(x => x.Product)
-                .Include(x => x.Customer)
+                .AsNoTracking()
+                .Include(r => r.Product)
+                .Include(r => r.Customer)
+                .Where(r => r.ProductId == productId)
                 .ToListAsync();
         }
 
-        public async Task<Rating?> UpdateRatingAsync(Rating rating)
+        public async Task<bool> UpdateRatingAsync(Rating rating)
         {
-            var existingRating = await dbContext.Ratings.FirstOrDefaultAsync(r => r.Id == rating.Id);
-            if (existingRating == null)
-                return null;
+            var rowsAffected = await dbContext.Ratings
+                .Where(r => r.Id == rating.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(r => r.Stars, rating.Stars)
+                    .SetProperty(r => r.Comment, rating.Comment)
+                    .SetProperty(r => r.IsVerifiedPurchase, rating.IsVerifiedPurchase)
+                    .SetProperty(r => r.UpdatedAt, DateTime.UtcNow));
 
-            existingRating.Stars = rating.Stars;
-            existingRating.Comment = rating.Comment;
-            existingRating.IsVerifiedPurchase = rating.IsVerifiedPurchase;
-            existingRating.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingRating;
+            return rowsAffected > 0;
         }
     }
 }

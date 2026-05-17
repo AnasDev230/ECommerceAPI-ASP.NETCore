@@ -79,8 +79,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (rating == null)
                 return NotFound();
             mapper.Map(request,rating);
-            rating =await ratingRepository.UpdateRatingAsync(rating);
-            return Ok(mapper.Map<RatingDto>(rating));
+            var updated = await ratingRepository.UpdateRatingAsync(rating);
+            if (!updated)
+                return NotFound();
+            var updatedRating = await ratingRepository.GetRatingAsync(productId, customerId);
+            return Ok(mapper.Map<RatingDto>(updatedRating));
         }
 
         [HttpDelete("{productId}")]

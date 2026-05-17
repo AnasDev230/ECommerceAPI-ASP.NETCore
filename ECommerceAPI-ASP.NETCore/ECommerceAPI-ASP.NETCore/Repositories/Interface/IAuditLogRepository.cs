@@ -11,6 +11,6 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<IEnumerable<AuditLog>> GetByUserIdAsync(string userId);
         Task<IEnumerable<AuditLog>> GetByActionAsync(string action);
         Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime start, DateTime end);
-        Task<AuditLog?> DeleteAsync(Guid id);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

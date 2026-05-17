@@ -21,20 +21,19 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return auditLog;
         }
 
-        public async Task<AuditLog?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            var auditLog = await dbContext.AuditLogs.FindAsync(id);
-            if (auditLog == null)
-                return null;
+            var rowsAffected = await dbContext.AuditLogs
+                .Where(a => a.Id == id)
+                .ExecuteDeleteAsync();
 
-            dbContext.AuditLogs.Remove(auditLog);
-            await dbContext.SaveChangesAsync();
-            return auditLog;
+            return rowsAffected > 0;
         }
 
         public async Task<IEnumerable<AuditLog>> GetAllAsync()
         {
             return await dbContext.AuditLogs
+                .AsNoTracking()
                 .Include(a => a.User)
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
@@ -43,6 +42,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<AuditLog>> GetByActionAsync(string action)
         {
             return await dbContext.AuditLogs
+                .AsNoTracking()
                 .Include(a => a.User)
                 .Where(a => a.Action == action)
                 .OrderByDescending(a => a.CreatedAt)
@@ -52,6 +52,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime start, DateTime end)
         {
             return await dbContext.AuditLogs
+                .AsNoTracking()
                 .Include(a => a.User)
                 .Where(a => a.CreatedAt >= start && a.CreatedAt <= end)
                 .OrderByDescending(a => a.CreatedAt)
@@ -61,6 +62,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<AuditLog>> GetByEntityAsync(string entityType, Guid? entityId = null)
         {
             var query = dbContext.AuditLogs
+                .AsNoTracking()
                 .Include(a => a.User)
                 .Where(a => a.EntityType == entityType);
 
@@ -77,6 +79,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<AuditLog>> GetByUserIdAsync(string userId)
         {
             return await dbContext.AuditLogs
+                .AsNoTracking()
                 .Include(a => a.User)
                 .Where(a => a.UserId == userId)
                 .OrderByDescending(a => a.CreatedAt)
@@ -86,6 +89,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<AuditLog?> GetByIdAsync(Guid id)
         {
             return await dbContext.AuditLogs
+                .AsNoTracking()
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }

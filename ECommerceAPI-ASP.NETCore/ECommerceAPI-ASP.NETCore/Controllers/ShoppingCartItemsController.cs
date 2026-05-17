@@ -93,8 +93,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                 return NotFound();
             if (request.Quantity < 1)
                 return BadRequest("Quantity must be at least 1.");
-            item=await shoppingCartItemRepository.UpdateQuantityAsync(item.Id,request.Quantity);
-            return Ok(mapper.Map<ShoppingCartItemDto>(item));
+            var updated = await shoppingCartItemRepository.UpdateQuantityAsync(item.Id,request.Quantity);
+            if (!updated)
+                return NotFound();
+            var updatedItem = await shoppingCartItemRepository.GetByIdAsync(ID);
+            return Ok(mapper.Map<ShoppingCartItemDto>(updatedItem));
         }
         [HttpDelete]
         [ProducesResponseType(StatusCodes.Status200OK)]

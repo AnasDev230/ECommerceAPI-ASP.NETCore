@@ -59,8 +59,11 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if(category==null)
                 return NotFound();
             mapper.Map(updateCategoryRequestDto, category);
-            category =await categoryRepository.UpdateAsync(category);
-            return Ok(mapper.Map<CategoryDto>(category));
+            var updated = await categoryRepository.UpdateAsync(category);
+            if (!updated)
+                return NotFound();
+            var updatedCategory = await categoryRepository.GetByID(ID);
+            return Ok(mapper.Map<CategoryDto>(updatedCategory));
         }
 
         [HttpDelete]

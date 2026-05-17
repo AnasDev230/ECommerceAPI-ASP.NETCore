@@ -9,8 +9,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<Payment?> GetByOrderIdAsync(Guid orderId);
         Task<IEnumerable<Payment>> GetByStatusAsync(PaymentStatus status);
         Task<IEnumerable<Payment>> GetAllAsync();
-        Task<Payment?> UpdateStatusAsync(Guid paymentId, PaymentStatus newStatus);
-        Task<Payment?> UpdateAsync(Payment payment);
-        Task<Payment?> DeleteAsync(Guid id);
+        Task<bool> UpdateStatusAsync(Guid paymentId, PaymentStatus newStatus);
+        Task<bool> UpdateAsync(Payment payment);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

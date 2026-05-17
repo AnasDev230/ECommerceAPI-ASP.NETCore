@@ -39,6 +39,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
             return await dbContext.Products
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Image)
                 .Include(p => p.Stocks)
@@ -48,6 +49,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Product>> GetAllProductsByCategoryID(Guid categoryId)
         {
             return await dbContext.Products
+                .AsNoTracking()
                 .Include(p => p.Category)
                 .Include(p => p.Image)
                 .Include(p => p.Stocks)
@@ -58,6 +60,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Product?> GetByID(Guid id)
         {
             return await dbContext.Products
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(p => p.Category)
                 .Include(p => p.Image)
                 .Include(p => p.Stocks)
@@ -65,27 +69,25 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<Product?> UpdateAsync(Product product)
+        public async Task<bool> UpdateAsync(Product product)
         {
-            var existingProduct = await dbContext.Products.FirstOrDefaultAsync(x => x.Id == product.Id);
-            if (existingProduct == null)
-                return null;
+            var rowsAffected = await dbContext.Products
+                .Where(p => p.Id == product.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.Name, product.Name)
+                    .SetProperty(p => p.Description, product.Description)
+                    .SetProperty(p => p.DescriptionPlainText, product.DescriptionPlainText)
+                    .SetProperty(p => p.SKU, product.SKU)
+                    .SetProperty(p => p.Brand, product.Brand)
+                    .SetProperty(p => p.BasePrice, product.BasePrice)
+                    .SetProperty(p => p.SalePrice, product.SalePrice)
+                    .SetProperty(p => p.IsActive, product.IsActive)
+                    .SetProperty(p => p.Weight, product.Weight)
+                    .SetProperty(p => p.ImageID, product.ImageID)
+                    .SetProperty(p => p.CategoryId, product.CategoryId)
+                    .SetProperty(p => p.UpdatedAt, DateTime.UtcNow));
 
-            existingProduct.Name = product.Name;
-            existingProduct.Description = product.Description;
-            existingProduct.DescriptionPlainText = product.DescriptionPlainText;
-            existingProduct.SKU = product.SKU;
-            existingProduct.Brand = product.Brand;
-            existingProduct.BasePrice = product.BasePrice;
-            existingProduct.SalePrice = product.SalePrice;
-            existingProduct.IsActive = product.IsActive;
-            existingProduct.Weight = product.Weight;
-            existingProduct.ImageID = product.ImageID;
-            existingProduct.CategoryId = product.CategoryId;
-            existingProduct.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingProduct;
+            return rowsAffected > 0;
         }
     }
 }

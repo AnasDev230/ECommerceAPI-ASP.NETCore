@@ -39,25 +39,27 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             }
         }
 
-        public async Task<ShoppingCartItem?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
             try
             {
-                var shoppingCartItem = await dbContext.ShoppingCartItems
+                var item = await dbContext.ShoppingCartItems
                     .Include(x => x.Stock)
                     .FirstOrDefaultAsync(x => x.Id == id);
 
-                if (shoppingCartItem == null)
-                    return null;
+                if (item == null)
+                    return false;
 
-                if (shoppingCartItem.Stock != null)
-                    shoppingCartItem.Stock.Quantity += shoppingCartItem.Quantity;
+                if (item.Stock != null)
+                    item.Stock.Quantity += item.Quantity;
 
-                dbContext.ShoppingCartItems.Remove(shoppingCartItem);
-                await dbContext.SaveChangesAsync();
+                var rowsAffected = await dbContext.ShoppingCartItems
+                    .Where(i => i.Id == id)
+                    .ExecuteDeleteAsync();
+
                 await transaction.CommitAsync();
-                return shoppingCartItem;
+                return rowsAffected > 0;
             }
             catch
             {
@@ -69,6 +71,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<ShoppingCartItem?> GetByIdAsync(Guid id)
         {
             return await dbContext.ShoppingCartItems
+                .AsNoTracking()
                 .Include(x => x.Stock)
                 .ThenInclude(s => s.Product)
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -77,48 +80,59 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<ShoppingCartItem>> GetItemsByCartIdAsync(Guid cartId)
         {
             return await dbContext.ShoppingCartItems
-                .Where(x => x.ShoppingCartId == cartId)
+                .AsNoTracking()
                 .Include(x => x.Stock)
                 .ThenInclude(s => s.Product)
+                .Where(x => x.ShoppingCartId == cartId)
                 .ToListAsync();
         }
 
-        public async Task<ShoppingCartItem?> UpdateQuantityAsync(Guid id, int quantity)
+        public async Task<bool> UpdateQuantityAsync(Guid id, int quantity)
         {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
             try
             {
-                var shoppingCartItem = await dbContext.ShoppingCartItems
-                    .Include(x => x.Stock)
-                    .FirstOrDefaultAsync(x => x.Id == id);
-
-                if (shoppingCartItem == null)
-                    return null;
-
                 if (quantity <= 0)
                     throw new InvalidOperationException("Quantity must be greater than zero.");
 
-                var quantityDifference = quantity - shoppingCartItem.Quantity;
+                var item = await dbContext.ShoppingCartItems
+                    .Include(x => x.Stock)
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (item == null)
+                    return false;
+
+                var quantityDifference = quantity - item.Quantity;
 
                 if (quantityDifference > 0)
                 {
-                    if (shoppingCartItem.Stock == null)
+                    if (item.Stock == null)
                         throw new InvalidOperationException("Stock not found for this item.");
-                    if (shoppingCartItem.Stock.Quantity < quantityDifference)
+                    if (item.Stock.Quantity < quantityDifference)
                         throw new InvalidOperationException("Not enough stock available.");
 
-                    shoppingCartItem.Stock.Quantity -= quantityDifference;
+                    var stockId = item.StockId;
+                    var newQuantity = item.Stock.Quantity - quantityDifference;
+                    await dbContext.Stocks
+                        .Where(s => s.Id == stockId)
+                        .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.Quantity, newQuantity));
                 }
                 else if (quantityDifference < 0)
                 {
-                    if (shoppingCartItem.Stock != null)
-                        shoppingCartItem.Stock.Quantity += Math.Abs(quantityDifference);
+                    var stockId = item.StockId;
+                    var currentStock = await dbContext.Stocks.FindAsync(stockId);
+                    var newQuantity = currentStock!.Quantity + Math.Abs(quantityDifference);
+                    await dbContext.Stocks
+                        .Where(s => s.Id == stockId)
+                        .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.Quantity, newQuantity));
                 }
 
-                shoppingCartItem.Quantity = quantity;
-                await dbContext.SaveChangesAsync();
+                await dbContext.ShoppingCartItems
+                    .Where(i => i.Id == id)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(i => i.Quantity, quantity));
+
                 await transaction.CommitAsync();
-                return shoppingCartItem;
+                return true;
             }
             catch
             {

@@ -21,20 +21,19 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return shipping;
         }
 
-        public async Task<Shipping?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            var shipping = await dbContext.Shippings.FindAsync(id);
-            if (shipping == null)
-                return null;
+            var rowsAffected = await dbContext.Shippings
+                .Where(s => s.Id == id)
+                .ExecuteDeleteAsync();
 
-            dbContext.Shippings.Remove(shipping);
-            await dbContext.SaveChangesAsync();
-            return shipping;
+            return rowsAffected > 0;
         }
 
         public async Task<IEnumerable<Shipping>> GetAllAsync()
         {
             return await dbContext.Shippings
+                .AsNoTracking()
                 .Include(s => s.Order)
                 .Include(s => s.ShippingAddress)
                 .ToListAsync();
@@ -43,6 +42,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Shipping?> GetByIdAsync(Guid id)
         {
             return await dbContext.Shippings
+                .AsNoTracking()
                 .Include(s => s.Order)
                 .Include(s => s.ShippingAddress)
                 .FirstOrDefaultAsync(s => s.Id == id);
@@ -51,6 +51,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Shipping?> GetByOrderIdAsync(Guid orderId)
         {
             return await dbContext.Shippings
+                .AsNoTracking()
                 .Include(s => s.Order)
                 .Include(s => s.ShippingAddress)
                 .FirstOrDefaultAsync(s => s.OrderId == orderId);
@@ -59,6 +60,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Shipping?> GetByTrackingNumberAsync(string trackingNumber)
         {
             return await dbContext.Shippings
+                .AsNoTracking()
                 .Include(s => s.Order)
                 .Include(s => s.ShippingAddress)
                 .FirstOrDefaultAsync(s => s.TrackingNumber == trackingNumber);
@@ -67,45 +69,51 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<IEnumerable<Shipping>> GetByStatusAsync(ShippingStatus status)
         {
             return await dbContext.Shippings
+                .AsNoTracking()
                 .Include(s => s.Order)
                 .Include(s => s.ShippingAddress)
                 .Where(s => s.Status == status)
                 .ToListAsync();
         }
 
-        public async Task<Shipping?> UpdateAsync(Shipping shipping)
+        public async Task<bool> UpdateAsync(Shipping shipping)
         {
-            var existingShipping = await dbContext.Shippings.FirstOrDefaultAsync(s => s.Id == shipping.Id);
-            if (existingShipping == null)
-                return null;
+            var rowsAffected = await dbContext.Shippings
+                .Where(s => s.Id == shipping.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(s => s.Carrier, shipping.Carrier)
+                    .SetProperty(s => s.TrackingNumber, shipping.TrackingNumber)
+                    .SetProperty(s => s.EstimatedDelivery, shipping.EstimatedDelivery)
+                    .SetProperty(s => s.ActualDelivery, shipping.ActualDelivery)
+                    .SetProperty(s => s.Status, shipping.Status)
+                    .SetProperty(s => s.Notes, shipping.Notes)
+                    .SetProperty(s => s.ShippingAddressId, shipping.ShippingAddressId)
+                    .SetProperty(s => s.UpdatedAt, DateTime.UtcNow));
 
-            existingShipping.Carrier = shipping.Carrier;
-            existingShipping.TrackingNumber = shipping.TrackingNumber;
-            existingShipping.EstimatedDelivery = shipping.EstimatedDelivery;
-            existingShipping.ActualDelivery = shipping.ActualDelivery;
-            existingShipping.Status = shipping.Status;
-            existingShipping.Notes = shipping.Notes;
-            existingShipping.ShippingAddressId = shipping.ShippingAddressId;
-            existingShipping.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingShipping;
+            return rowsAffected > 0;
         }
 
-        public async Task<Shipping?> UpdateStatusAsync(Guid shippingId, ShippingStatus newStatus)
+        public async Task<bool> UpdateStatusAsync(Guid shippingId, ShippingStatus newStatus)
         {
-            var existingShipping = await dbContext.Shippings.FindAsync(shippingId);
-            if (existingShipping == null)
-                return null;
-
-            existingShipping.Status = newStatus;
-            existingShipping.UpdatedAt = DateTime.UtcNow;
-
             if (newStatus == ShippingStatus.Delivered)
-                existingShipping.ActualDelivery = DateTime.UtcNow;
+            {
+                var rowsAffected = await dbContext.Shippings
+                    .Where(s => s.Id == shippingId)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(s => s.Status, newStatus)
+                        .SetProperty(s => s.UpdatedAt, DateTime.UtcNow)
+                        .SetProperty(s => s.ActualDelivery, DateTime.UtcNow));
 
-            await dbContext.SaveChangesAsync();
-            return existingShipping;
+                return rowsAffected > 0;
+            }
+
+            var rows = await dbContext.Shippings
+                .Where(s => s.Id == shippingId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(s => s.Status, newStatus)
+                    .SetProperty(s => s.UpdatedAt, DateTime.UtcNow));
+
+            return rows > 0;
         }
     }
 }

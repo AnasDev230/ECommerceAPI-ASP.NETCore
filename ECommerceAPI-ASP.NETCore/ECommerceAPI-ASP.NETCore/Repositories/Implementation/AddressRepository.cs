@@ -18,13 +18,9 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         {
             if (address.IsDefault)
             {
-                var existingDefault = await dbContext.Addresses
-                    .FirstOrDefaultAsync(a => a.UserId == address.UserId && a.IsDefault);
-
-                if (existingDefault != null)
-                {
-                    existingDefault.IsDefault = false;
-                }
+                await dbContext.Addresses
+                    .Where(a => a.UserId == address.UserId && a.IsDefault)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.IsDefault, false));
             }
 
             await dbContext.Addresses.AddAsync(address);
@@ -32,20 +28,19 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return address;
         }
 
-        public async Task<Address?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            var address = await dbContext.Addresses.FindAsync(id);
-            if (address == null)
-                return null;
+            var rowsAffected = await dbContext.Addresses
+                .Where(a => a.Id == id)
+                .ExecuteDeleteAsync();
 
-            dbContext.Addresses.Remove(address);
-            await dbContext.SaveChangesAsync();
-            return address;
+            return rowsAffected > 0;
         }
 
         public async Task<IEnumerable<Address>> GetAllByUserIdAsync(string userId)
         {
             return await dbContext.Addresses
+                .AsNoTracking()
                 .Include(a => a.User)
                 .Where(a => a.UserId == userId)
                 .ToListAsync();
@@ -54,6 +49,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Address?> GetByIdAsync(Guid id)
         {
             return await dbContext.Addresses
+                .AsNoTracking()
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
@@ -61,36 +57,32 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Address?> GetDefaultByUserIdAsync(string userId)
         {
             return await dbContext.Addresses
+                .AsNoTracking()
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(a => a.UserId == userId && a.IsDefault);
         }
 
-        public async Task<Address?> SetDefaultAsync(Guid addressId, string userId)
+        public async Task<bool> SetDefaultAsync(Guid addressId, string userId)
         {
             await using var transaction = await dbContext.Database.BeginTransactionAsync();
             try
             {
-                var address = await dbContext.Addresses
-                    .FirstOrDefaultAsync(a => a.Id == addressId && a.UserId == userId);
+                var addressExists = await dbContext.Addresses.AnyAsync(a => a.Id == addressId && a.UserId == userId);
+                if (!addressExists)
+                    return false;
 
-                if (address == null)
-                    return null;
+                await dbContext.Addresses
+                    .Where(a => a.UserId == userId && a.Id != addressId)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(a => a.IsDefault, false));
 
-                var existingDefault = await dbContext.Addresses
-                    .Where(a => a.UserId == userId && a.IsDefault && a.Id != addressId)
-                    .ToListAsync();
+                await dbContext.Addresses
+                    .Where(a => a.Id == addressId)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(a => a.IsDefault, true)
+                        .SetProperty(a => a.UpdatedAt, DateTime.UtcNow));
 
-                foreach (var defaultAddress in existingDefault)
-                {
-                    defaultAddress.IsDefault = false;
-                }
-
-                address.IsDefault = true;
-                address.UpdatedAt = DateTime.UtcNow;
-
-                await dbContext.SaveChangesAsync();
                 await transaction.CommitAsync();
-                return address;
+                return true;
             }
             catch
             {
@@ -99,24 +91,22 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             }
         }
 
-        public async Task<Address?> UpdateAsync(Address address)
+        public async Task<bool> UpdateAsync(Address address)
         {
-            var existingAddress = await dbContext.Addresses.FirstOrDefaultAsync(a => a.Id == address.Id);
-            if (existingAddress == null)
-                return null;
+            var rowsAffected = await dbContext.Addresses
+                .Where(a => a.Id == address.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(a => a.Street, address.Street)
+                    .SetProperty(a => a.City, address.City)
+                    .SetProperty(a => a.State, address.State)
+                    .SetProperty(a => a.PostalCode, address.PostalCode)
+                    .SetProperty(a => a.Country, address.Country)
+                    .SetProperty(a => a.PhoneNumber, address.PhoneNumber)
+                    .SetProperty(a => a.AddressType, address.AddressType)
+                    .SetProperty(a => a.IsDefault, address.IsDefault)
+                    .SetProperty(a => a.UpdatedAt, DateTime.UtcNow));
 
-            existingAddress.Street = address.Street;
-            existingAddress.City = address.City;
-            existingAddress.State = address.State;
-            existingAddress.PostalCode = address.PostalCode;
-            existingAddress.Country = address.Country;
-            existingAddress.PhoneNumber = address.PhoneNumber;
-            existingAddress.AddressType = address.AddressType;
-            existingAddress.IsDefault = address.IsDefault;
-            existingAddress.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingAddress;
+            return rowsAffected > 0;
         }
     }
 }

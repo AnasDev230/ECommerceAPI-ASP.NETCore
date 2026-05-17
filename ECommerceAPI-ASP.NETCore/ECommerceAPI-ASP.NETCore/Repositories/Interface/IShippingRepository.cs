@@ -10,8 +10,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<Shipping?> GetByTrackingNumberAsync(string trackingNumber);
         Task<IEnumerable<Shipping>> GetByStatusAsync(ShippingStatus status);
         Task<IEnumerable<Shipping>> GetAllAsync();
-        Task<Shipping?> UpdateStatusAsync(Guid shippingId, ShippingStatus newStatus);
-        Task<Shipping?> UpdateAsync(Shipping shipping);
-        Task<Shipping?> DeleteAsync(Guid id);
+        Task<bool> UpdateStatusAsync(Guid shippingId, ShippingStatus newStatus);
+        Task<bool> UpdateAsync(Shipping shipping);
+        Task<bool> DeleteAsync(Guid id);
     }
 }

@@ -21,37 +21,33 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return stock;
         }
 
-        public async Task<Stock?> DeleteAsync(Guid id)
+        public async Task<bool> DeleteAsync(Guid id)
         {
-            var stock = await dbContext.Stocks
-                .Include(s => s.Product)
-                .Include(s => s.Image)
-                .FirstOrDefaultAsync(s => s.Id == id);
-
-            if (stock == null)
-                return null;
-
-            var isInCart = await dbContext.ShoppingCartItems.AnyAsync(c => c.StockId == stock.Id);
+            var isInCart = await dbContext.ShoppingCartItems.AnyAsync(c => c.StockId == id);
             if (isInCart)
                 throw new InvalidOperationException("Cannot delete stock that is in shopping carts.");
 
-            dbContext.Stocks.Remove(stock);
-            await dbContext.SaveChangesAsync();
-            return stock;
+            var rowsAffected = await dbContext.Stocks
+                .Where(s => s.Id == id)
+                .ExecuteDeleteAsync();
+
+            return rowsAffected > 0;
         }
 
         public async Task<IEnumerable<Stock>> GetAllByProductIdAsync(Guid productId)
         {
             return await dbContext.Stocks
-                .Where(x => x.ProductId == productId)
-                .Include(x => x.Product)
-                .Include(x => x.Image)
+                .AsNoTracking()
+                .Include(s => s.Product)
+                .Include(s => s.Image)
+                .Where(s => s.ProductId == productId)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Stock>> GetAllStocksAsync()
         {
             return await dbContext.Stocks
+                .AsNoTracking()
                 .Include(s => s.Product)
                 .Include(s => s.Image)
                 .ToListAsync();
@@ -60,9 +56,10 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         public async Task<Stock?> GetByID(Guid id)
         {
             return await dbContext.Stocks
+                .AsNoTracking()
                 .Include(s => s.Product)
                 .Include(s => s.Image)
-                .FirstOrDefaultAsync(x => x.Id == id);
+                .FirstOrDefaultAsync(s => s.Id == id);
         }
 
         public async Task<bool> IsUsedInCartAsync(Guid stockId)
@@ -70,23 +67,21 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return await dbContext.ShoppingCartItems.AnyAsync(c => c.StockId == stockId);
         }
 
-        public async Task<Stock?> UpdateAsync(Stock stock)
+        public async Task<bool> UpdateAsync(Stock stock)
         {
-            var existingStock = await dbContext.Stocks.FirstOrDefaultAsync(x => x.Id == stock.Id);
-            if (existingStock == null)
-                return null;
+            var rowsAffected = await dbContext.Stocks
+                .Where(s => s.Id == stock.Id)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(s => s.SKU, stock.SKU)
+                    .SetProperty(s => s.Color, stock.Color)
+                    .SetProperty(s => s.Size, stock.Size)
+                    .SetProperty(s => s.Quantity, stock.Quantity)
+                    .SetProperty(s => s.Price, stock.Price)
+                    .SetProperty(s => s.ImageID, stock.ImageID)
+                    .SetProperty(s => s.ProductId, stock.ProductId)
+                    .SetProperty(s => s.UpdatedAt, DateTime.UtcNow));
 
-            existingStock.SKU = stock.SKU;
-            existingStock.Color = stock.Color;
-            existingStock.Size = stock.Size;
-            existingStock.Quantity = stock.Quantity;
-            existingStock.Price = stock.Price;
-            existingStock.ImageID = stock.ImageID;
-            existingStock.ProductId = stock.ProductId;
-            existingStock.UpdatedAt = DateTime.UtcNow;
-
-            await dbContext.SaveChangesAsync();
-            return existingStock;
+            return rowsAffected > 0;
         }
     }
 }

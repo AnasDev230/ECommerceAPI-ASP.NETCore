@@ -8,7 +8,7 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<Order?> GetOrderByIdAsync(Guid id);
         Task<IEnumerable<Order>> GetOrdersByCustomerIdAsync(string customerId);
         Task<IEnumerable<Order>> GetAllOrdersAsync();
-        Task<Order?> UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus);
+        Task<bool> UpdateOrderStatusAsync(Guid orderId, OrderStatus newStatus);
         Task<bool> DeleteOrderAsync(Guid id);
     }
 }

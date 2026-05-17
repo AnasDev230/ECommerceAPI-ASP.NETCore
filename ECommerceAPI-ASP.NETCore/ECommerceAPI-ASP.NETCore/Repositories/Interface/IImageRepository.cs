@@ -7,6 +7,6 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Interface
         Task<Image> UploadAsync(IFormFile file, Image image);
         Task<IEnumerable<Image>> GetAllAsync();
         Task<Image?> GetByID(Guid id);
-        Task<Image?> DeleteAsync(Guid id);
+        Task<bool> DeleteAsync(Guid id);
     }
 }
