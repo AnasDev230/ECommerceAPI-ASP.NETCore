@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
+using ECommerceAPI_ASP.NETCore.Models.DTO;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
+using ECommerceAPI_ASP.NETCore.Models.DTO.Image;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Order;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Order.OrderItem;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
@@ -39,6 +41,8 @@ namespace ECommerceAPI_ASP.NETCore.Mappings
 
             CreateMap<OrderItem, OrderItemDto>().ReverseMap();
             CreateMap<Order,OrderDto>().ReverseMap();
+
+            CreateMap<Image, ImageDto>().ReverseMap();
         }
     }
 }

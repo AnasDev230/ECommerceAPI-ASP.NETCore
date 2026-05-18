@@ -1,4 +1,4 @@
-﻿using ECommerceAPI_ASP.NETCore.Models.DTO;
+﻿using ECommerceAPI_ASP.NETCore.Models.DTO.Image;
 
 namespace ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock
 {

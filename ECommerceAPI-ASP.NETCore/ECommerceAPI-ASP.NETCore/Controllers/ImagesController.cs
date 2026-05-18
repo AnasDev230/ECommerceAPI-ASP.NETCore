@@ -1,7 +1,6 @@
-﻿using ECommerceAPI_ASP.NETCore.Models.DTO;
-using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+﻿using ECommerceAPI_ASP.NETCore.Models.DTO.Image;
+using ECommerceAPI_ASP.NETCore.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
@@ -10,116 +9,68 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
     [ApiController]
     public class ImagesController : ControllerBase
     {
-        private readonly IImageRepository imageRepository;
+        private readonly IImageService imageService;
 
-        public ImagesController(IImageRepository imageRepository)
+        public ImagesController(IImageService imageService)
         {
-            this.imageRepository = imageRepository;
+            this.imageService = imageService;
         }
 
-        [HttpPost]
+        [HttpPost(Name = "UploadImage")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
-        public async Task<IActionResult> UploadImage(IFormFile file)
+        public async Task<IActionResult> UploadImage(IFormFile file, [FromForm] string? title = null, [FromForm] string? altText = null)
         {
-            ValidateFileUpload(file);
-            if (ModelState.IsValid)
+            if (file == null || file.Length == 0)
+                return BadRequest("No file was provided.");
+
+            try
             {
-var Image = new Models.Domain.Image
-                {
-                    FileExtension = Path.GetExtension(file.FileName).ToLower(),
-                    FileName = Path.GetFileNameWithoutExtension(file.FileName),
-                    Title = file.FileName,
-                    CreatedAt = DateTime.UtcNow,
-                };
-                Image = await imageRepository.UploadAsync(file, Image);
-                ImageDto response = new ImageDto
-                {
-                    ID = Image.Id,
-                    FileExtension = Image.FileExtension,
-                    FileName = Image.FileName,
-                    Title = Image.Title,
-                    DateCreated = DateTime.UtcNow,
-                    Url = Image.Url
-                };
-                return Ok(response);
+                var image = await imageService.UploadAsync(file, title, altText);
+                return Ok(image);
             }
-            return BadRequest(ModelState);
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpGet]
+        [HttpGet(Name = "GetAllImages")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
         {
-            var images = await imageRepository.GetAllAsync();
-            var response = new List<ImageDto>();
-            foreach (var Image in images)
-            {
-                response.Add(new ImageDto
-                {
-ID = Image.Id,
-                    FileExtension = Image.FileExtension,
-                    FileName = Image.FileName,
-                    Title = Image.Title,
-                    DateCreated = Image.CreatedAt,
-                    Url = Image.Url
-                });
-            }
-            return Ok(response);
+            var images = await imageService.GetAllAsync();
+            return Ok(images);
         }
 
-        [HttpDelete("{ID:guid}")]
-        [Authorize(Roles = "Admin,Vendor,Customer")]
-        public async Task<IActionResult> DeleteImage(Guid ID)
-        {
-            var image = await imageRepository.GetByID(ID);
-            if (image == null)
-                return NotFound();
-            var deleted = await imageRepository.DeleteAsync(ID);
-            if (!deleted)
-                return NotFound();
-            var response = new ImageDto
-            {
-                ID = image.Id,
-                FileExtension = image.FileExtension,
-                FileName = image.FileName,
-                Title = image.Title,
-                DateCreated = image.CreatedAt,
-                Url = image.Url
-            };
-            return Ok(response);
-        }
-
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetImageByID")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetImageByID([FromRoute] Guid id)
         {
-            var image=await imageRepository.GetByID(id);
-            if(image == null)
+            var image = await imageService.GetByIdAsync(id);
+            if (image == null)
                 return NotFound();
-            var response = new ImageDto
-            {
-                ID = image.Id,
-                FileExtension = image.FileExtension,
-                FileName = image.FileName,
-                Title = image.Title,
-                DateCreated = image.CreatedAt,
-                Url = image.Url
-            };
-            return Ok(response);
+            return Ok(image);
         }
 
-
-        private void ValidateFileUpload(IFormFile file)
+        [HttpDelete("{id}", Name = "DeleteImage")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Authorize(Roles = "Admin,Vendor,Customer")]
+        public async Task<IActionResult> DeleteImage([FromRoute] Guid id)
         {
-            var allowedExtensions = new string[] { ".jpg", ".jpej", ".png" };
-            if (!allowedExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-            {
-                ModelState.AddModelError("file", "Unsupported File Format");
-            }
-            if (file.Length > 10485760)
-            {
-                ModelState.AddModelError("file", "File Size Cannot Be More Than 10 Mb");
-            }
+            var image = await imageService.DeleteAsync(id);
+            if (image == null)
+                return NotFound();
+            return Ok(image);
         }
     }
 }

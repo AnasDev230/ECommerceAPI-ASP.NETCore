@@ -66,6 +66,7 @@ builder.Services.AddScoped<IShippingRepository, ShippingRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 builder.Services.AddIdentityCore<IdentityUser>().AddRoles<IdentityRole>()
     .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Ecommerce")
