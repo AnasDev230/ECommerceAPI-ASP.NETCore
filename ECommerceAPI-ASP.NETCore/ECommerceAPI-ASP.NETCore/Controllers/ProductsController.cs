@@ -29,7 +29,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                 return Unauthorized();
 
             var product = await productService.CreateAsync(request, vendorId);
-            return Created("", product);
+            return CreatedAtAction(nameof(GetProductByID), new { ID = product.Id }, product);
         }
 
         [HttpGet("GetByID/{ID}", Name = "GetProductByID")]
@@ -68,17 +68,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
             var isAdmin = User.IsInRole("Admin");
 
-            try
-            {
-                var product = await productService.UpdateAsync(ID, request, vendorId, isAdmin);
-                if (product == null)
-                    return NotFound();
-                return Ok(product);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            var product = await productService.UpdateAsync(ID, request, vendorId, isAdmin);
+            if (product == null)
+                return NotFound();
+            return Ok(product);
         }
 
         [HttpDelete("{ID:Guid}", Name = "DeleteProduct")]
@@ -94,17 +87,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
             var isAdmin = User.IsInRole("Admin");
 
-            try
-            {
-                var product = await productService.DeleteAsync(ID, vendorId, isAdmin);
-                if (product == null)
-                    return NotFound();
-                return Ok(product);
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Forbid();
-            }
+            var product = await productService.DeleteAsync(ID, vendorId, isAdmin);
+            if (product == null)
+                return NotFound();
+            return Ok(product);
         }
     }
 }

@@ -28,15 +28,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (customerId == null)
                 return Unauthorized();
 
-            try
-            {
-                var shoppingCart = await shoppingCartService.CreateAsync(customerId);
-                return Created("", shoppingCart);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var shoppingCart = await shoppingCartService.CreateAsync(customerId);
+            return CreatedAtAction(nameof(GetCartByID), new { shoppingCartID = shoppingCart.Id }, shoppingCart);
         }
 
         [HttpGet("GetByCustomerID")]

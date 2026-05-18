@@ -33,19 +33,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (string.IsNullOrWhiteSpace(type))
                 return BadRequest("Transaction type is required.");
 
-            try
-            {
-                var transaction = await paymentService.AddTransactionAsync(paymentId, gatewayTransactionId, type, amount, gatewayRawResponse);
-                return Created("", transaction);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var transaction = await paymentService.AddTransactionAsync(paymentId, gatewayTransactionId, type, amount, gatewayRawResponse);
+            return Created("", transaction);
         }
 
         [HttpGet("{paymentId}")]
@@ -54,15 +43,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetTransactionsByPaymentId([FromRoute] Guid paymentId)
         {
-            try
-            {
-                var transactions = await paymentService.GetTransactionsByPaymentIdAsync(paymentId);
-                return Ok(transactions);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var transactions = await paymentService.GetTransactionsByPaymentIdAsync(paymentId);
+            return Ok(transactions);
         }
     }
 }

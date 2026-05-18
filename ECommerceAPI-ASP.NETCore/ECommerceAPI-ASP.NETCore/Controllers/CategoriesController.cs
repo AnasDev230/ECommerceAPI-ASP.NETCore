@@ -23,7 +23,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         public async Task<IActionResult> AddCategory([FromBody] CreateCategoryRequestDto request)
         {
             var category = await categoryService.CreateAsync(request);
-            return Created("", category);
+            return CreatedAtAction(nameof(GetCategoryByID), new { ID = category.Id }, category);
         }
 
         [HttpGet]

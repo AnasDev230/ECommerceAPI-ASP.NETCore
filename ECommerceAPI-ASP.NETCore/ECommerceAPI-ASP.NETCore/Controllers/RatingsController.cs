@@ -29,19 +29,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (customerId == null)
                 return Unauthorized();
 
-            try
-            {
-                var rating = await ratingService.CreateAsync(customerId, request);
-                return Created("", rating);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var rating = await ratingService.CreateAsync(customerId, request);
+            return CreatedAtAction(nameof(GetMyRating), new { productId = request.ProductId }, rating);
         }
 
         [HttpGet("MyRating")]
@@ -67,15 +56,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetRatingsByProduct([FromRoute] Guid productID)
         {
-            try
-            {
-                var ratings = await ratingService.GetByProductIdAsync(productID);
-                return Ok(ratings);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var ratings = await ratingService.GetByProductIdAsync(productID);
+            return Ok(ratings);
         }
 
         [HttpPut("{productId}")]

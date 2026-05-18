@@ -23,19 +23,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateShipping([FromBody] CreateShippingRequestDto request)
         {
-            try
-            {
-                var shipping = await shippingService.CreateAsync(request);
-                return Created("", shipping);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var shipping = await shippingService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetShippingById), new { id = shipping.Id }, shipping);
         }
 
         [HttpGet("{id}")]
@@ -88,15 +77,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetShippingsByStatus([FromRoute] string status)
         {
-            try
-            {
-                var shippings = await shippingService.GetByStatusAsync(status);
-                return Ok(shippings);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var shippings = await shippingService.GetByStatusAsync(status);
+            return Ok(shippings);
         }
 
         [HttpPut("{id}")]
@@ -118,17 +100,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateShippingStatus([FromRoute] Guid shippingId, [FromBody] UpdateShippingStatusRequestDto request)
         {
-            try
-            {
-                var shipping = await shippingService.UpdateStatusAsync(shippingId, request);
-                if (shipping == null)
-                    return NotFound();
-                return Ok(shipping);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var shipping = await shippingService.UpdateStatusAsync(shippingId, request);
+            if (shipping == null)
+                return NotFound();
+            return Ok(shipping);
         }
 
         [HttpDelete("{id}")]
@@ -138,21 +113,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteShipping([FromRoute] Guid id)
         {
-            try
-            {
-                var deleted = await shippingService.DeleteAsync(id);
-                if (!deleted)
-                    return NotFound();
-                return Ok("Shipping deleted successfully");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var deleted = await shippingService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound();
+            return Ok("Shipping deleted successfully");
         }
     }
 }

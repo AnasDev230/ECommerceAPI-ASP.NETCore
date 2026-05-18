@@ -12,7 +12,7 @@ namespace ECommerceAPI_ASP.NETCore.Models.DTO.Auth
         public string Email { get; set; } = string.Empty;
         [Required]
         [DataType(DataType.Password)]
+        [MinLength(8)]
         public string Password { get; set; } = string.Empty;
-        public string[]? Roles { get; set; }
     }
 }

@@ -28,15 +28,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (customerId == null)
                 return Unauthorized();
 
-            try
-            {
-                var item = await shoppingCartItemService.AddToCartAsync(customerId, request);
-                return Created("", item);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var item = await shoppingCartItemService.AddToCartAsync(customerId, request);
+            return CreatedAtAction(nameof(GetItemByID), new { ID = item.Id }, item);
         }
 
         [HttpGet("GetByID")]
@@ -68,17 +61,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> UpdateItem([FromRoute] Guid ID, [FromBody] UpdateShoppingCartItemRequestDto request)
         {
-            try
-            {
-                var item = await shoppingCartItemService.UpdateQuantityAsync(ID, request);
-                if (item == null)
-                    return NotFound();
-                return Ok(item);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var item = await shoppingCartItemService.UpdateQuantityAsync(ID, request);
+            if (item == null)
+                return NotFound();
+            return Ok(item);
         }
 
         [HttpDelete("{ID}")]

@@ -26,15 +26,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No file was provided.");
 
-            try
-            {
-                var image = await imageService.UploadAsync(file, title, altText);
-                return Ok(image);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var image = await imageService.UploadAsync(file, title, altText);
+            return Ok(image);
         }
 
         [HttpGet(Name = "GetAllImages")]

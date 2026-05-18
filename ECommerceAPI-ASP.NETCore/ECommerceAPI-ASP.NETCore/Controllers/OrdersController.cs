@@ -28,15 +28,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             if (customerId == null)
                 return Unauthorized();
 
-            try
-            {
-                var order = await orderService.CreateFromCartAsync(customerId);
-                return Ok(order);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var order = await orderService.CreateFromCartAsync(customerId);
+            return Ok(order);
         }
 
         [HttpGet("{orderID}")]
@@ -73,17 +66,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus([FromRoute] Guid orderId, [FromBody] UpdateOrderStatusRequestDto request)
         {
-            try
-            {
-                var order = await orderService.UpdateStatusAsync(orderId, request);
-                if (order == null)
-                    return NotFound();
-                return Ok(order);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var order = await orderService.UpdateStatusAsync(orderId, request);
+            if (order == null)
+                return NotFound();
+            return Ok(order);
         }
 
         [HttpDelete("{orderId}")]

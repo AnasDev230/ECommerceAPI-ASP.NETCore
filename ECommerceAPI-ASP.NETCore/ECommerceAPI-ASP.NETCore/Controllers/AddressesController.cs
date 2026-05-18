@@ -28,7 +28,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
                 return Unauthorized();
 
             var address = await addressService.CreateAsync(userId, request);
-            return Created("", address);
+            return CreatedAtAction(nameof(GetAddressById), new { id = address.Id }, address);
         }
 
         [HttpGet]

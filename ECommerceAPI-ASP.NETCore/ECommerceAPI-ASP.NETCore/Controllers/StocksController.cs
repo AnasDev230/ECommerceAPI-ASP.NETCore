@@ -23,15 +23,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> AddStock([FromBody] CreateStockRequestDto request)
         {
-            try
-            {
-                var stock = await stockService.CreateAsync(request);
-                return Created("", stock);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var stock = await stockService.CreateAsync(request);
+            return CreatedAtAction(nameof(GetByID), new { StockID = stock.Id }, stock);
         }
 
         [HttpGet("{productID}")]
@@ -40,15 +33,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> GetAllStocksByProductID([FromRoute] Guid productID)
         {
-            try
-            {
-                var stocks = await stockService.GetByProductIdAsync(productID);
-                return Ok(stocks);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
+            var stocks = await stockService.GetByProductIdAsync(productID);
+            return Ok(stocks);
         }
 
         [HttpGet("GetByID/{StockID}", Name = "GetStockByID")]
@@ -82,21 +68,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> DeleteStock([FromRoute] Guid StockID)
         {
-            try
-            {
-                var deleted = await stockService.DeleteAsync(StockID);
-                if (!deleted)
-                    return NotFound();
-                return Ok("Stock deleted successfully");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var deleted = await stockService.DeleteAsync(StockID);
+            if (!deleted)
+                return NotFound();
+            return Ok("Stock deleted successfully");
         }
     }
 }

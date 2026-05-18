@@ -23,19 +23,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentRequestDto request)
         {
-            try
-            {
-                var payment = await paymentService.CreateAsync(request);
-                return Created("", payment);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var payment = await paymentService.CreateAsync(request);
+            return Created("", payment);
         }
 
         [HttpGet("{id}")]
@@ -77,15 +66,8 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetPaymentsByStatus([FromRoute] string status)
         {
-            try
-            {
-                var payments = await paymentService.GetByStatusAsync(status);
-                return Ok(payments);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var payments = await paymentService.GetByStatusAsync(status);
+            return Ok(payments);
         }
 
         [HttpPut("{paymentId}/Status")]
@@ -95,17 +77,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdatePaymentStatus([FromRoute] Guid paymentId, [FromBody] UpdatePaymentStatusRequestDto request)
         {
-            try
-            {
-                var payment = await paymentService.UpdateStatusAsync(paymentId, request);
-                if (payment == null)
-                    return NotFound();
-                return Ok(payment);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var payment = await paymentService.UpdateStatusAsync(paymentId, request);
+            if (payment == null)
+                return NotFound();
+            return Ok(payment);
         }
 
         [HttpDelete("{id}")]
@@ -115,21 +90,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeletePayment([FromRoute] Guid id)
         {
-            try
-            {
-                var deleted = await paymentService.DeleteAsync(id);
-                if (!deleted)
-                    return NotFound();
-                return Ok("Payment deleted successfully");
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var deleted = await paymentService.DeleteAsync(id);
+            if (!deleted)
+                return NotFound();
+            return Ok("Payment deleted successfully");
         }
     }
 }

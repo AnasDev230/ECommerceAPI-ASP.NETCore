@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**E-Commerce REST API** built with ASP.NET Core 8.0 Web API. Provides full CRUD operations for products, categories, shopping carts, orders, ratings, stocks, and image uploads. Uses SQL Server with Entity Framework Core, ASP.NET Core Identity for authentication, and JWT Bearer tokens for authorization.
+**E-Commerce REST API** built with ASP.NET Core 8.0 Web API. Provides full CRUD operations for products, categories, shopping carts, orders, ratings, stocks, payments, shipping, addresses, images, and audit logs. Uses SQL Server with Entity Framework Core, ASP.NET Core Identity for authentication, and JWT Bearer tokens for authorization.
 
 ### Framework & Dependencies
 
@@ -25,7 +25,7 @@
 - **Nullable Reference Types:** Enabled
 - **Implicit Usings:** Enabled
 - **Root Namespace:** `ECommerceAPI_ASP.NETCore`
-- **Architecture:** Repository pattern with interface/implementation separation
+- **Architecture:** Service Layer pattern (Controller → Service → Repository)
 - **Authentication:** ASP.NET Core Identity + JWT Bearer
 - **Roles:** Admin, Vendor, Customer
 - **Database:** SQL Server (EF Core 8.0.19, Code-First with migrations)
@@ -86,6 +86,7 @@ dotnet add ECommerceAPI-ASP.NETCore/ECommerceAPI-ASP.NETCore.csproj reference EC
 ECommerceAPI-ASP.NETCore/
 ├── .gitignore
 ├── README.md
+├── AGENTS.md
 └── ECommerceAPI-ASP.NETCore/
     ├── ECommerceAPI-ASP.NETCore.sln
     └── ECommerceAPI-ASP.NETCore/
@@ -97,16 +98,21 @@ ECommerceAPI-ASP.NETCore/
         ├── Images/                              # Uploaded image files
         ├── Properties/
         │   └── launchSettings.json
-        ├── Controllers/                         # API Controllers (9)
+        ├── Controllers/                         # API Controllers (15)
+        │   ├── AddressesController.cs
+        │   ├── AuditLogsController.cs
         │   ├── AuthController.cs
         │   ├── CategoriesController.cs
         │   ├── ImagesController.cs
         │   ├── OrdersController.cs
+        │   ├── PaymentsController.cs
         │   ├── ProductsController.cs
         │   ├── RatingsController.cs
         │   ├── ShoppingCartItemsController.cs
         │   ├── ShoppingCartsController.cs
-        │   └── StocksController.cs
+        │   ├── ShippingsController.cs
+        │   ├── StocksController.cs
+        │   └── TransactionsController.cs
         ├── Data/
         │   └── EcommerceDBContext.cs            # EF Core DbContext
         ├── Mappings/
@@ -132,7 +138,13 @@ ECommerceAPI-ASP.NETCore/
         │   │   ├── ShoppingCartItem.cs
         │   │   ├── Stock.cs
         │   │   └── Transaction.cs
-        │   └── DTO/                             # Request/Response DTOs (26)
+        │   └── DTO/                             # Request/Response DTOs (40+)
+        │       ├── Address/
+        │       │   ├── AddressDto.cs
+        │       │   ├── CreateAddressRequestDto.cs
+        │       │   └── UpdateAddressRequestDto.cs
+        │       ├── AuditLog/
+        │       │   └── AuditLogDto.cs
         │       ├── Auth/
         │       │   ├── LoginRequestDto.cs
         │       │   ├── LoginResponseDto.cs
@@ -150,6 +162,10 @@ ECommerceAPI-ASP.NETCore/
         │       │   └── OrderItem/
         │       │       ├── OrderItemDto.cs
         │       │       └── CreateOrderItemRequestDto.cs
+        │       ├── Payment/
+        │       │   ├── PaymentDto.cs
+        │       │   ├── CreatePaymentRequestDto.cs
+        │       │   └── UpdatePaymentStatusRequestDto.cs
         │       ├── Product/
         │       │   ├── ProductDto.cs
         │       │   ├── CreateProductRequestDto.cs
@@ -162,42 +178,76 @@ ECommerceAPI-ASP.NETCore/
         │       │       ├── StockDto.cs
         │       │       ├── CreateStockRequestDto.cs
         │       │       └── UpdateStockRequestDto.cs
-        │       └── ShoppingCart/
-        │           ├── ShoppingCartDto.cs
-        │           ├── CreateShoppingCartRequestDto.cs
-        │           └── ShoppingCartItem/
-        │               ├── ShoppingCartItemDto.cs
-        │               ├── CreateShoppingCartItemRequestDto.cs
-        │               └── UpdateShoppingCartItemRequestDto.cs
-        └── Repositories/
-            ├── Interface/                       # Repository interfaces (13)
-            │   ├── IAddressRepository.cs
-            │   ├── IAuditLogRepository.cs
-            │   ├── ICategoryRepository.cs
-            │   ├── IImageRepository.cs
-            │   ├── IOrderRepository.cs
-            │   ├── IPaymentRepository.cs
-            │   ├── IProductRepository.cs
-            │   ├── IRatingRepository.cs
-            │   ├── IShippingRepository.cs
-            │   ├── IShoppingCartItemRepository.cs
-            │   ├── IShoppingCartRepository.cs
-            │   ├── IStockRepository.cs
-            │   └── ITokenRepository.cs
-            └── Implementation/                  # Repository implementations (13)
-                ├── AddressRepository.cs
-                ├── AuditLogRepository.cs
-                ├── CategoryRepository.cs
-                ├── ImageRepository.cs
-                ├── OrderRepository.cs
-                ├── PaymentRepository.cs
-                ├── ProductRepository.cs
-                ├── RatingRepository.cs
-                ├── ShippingRepository.cs
-                ├── ShoppingCartItemRepository.cs
-                ├── ShoppingCartRepository.cs
-                ├── StockRepository.cs
-                └── TokenRepository.cs
+        │       ├── Shipping/
+        │       │   ├── ShippingDto.cs
+        │       │   ├── CreateShippingRequestDto.cs
+        │       │   ├── UpdateShippingRequestDto.cs
+        │       │   └── UpdateShippingStatusRequestDto.cs
+        │       ├── ShoppingCart/
+        │       │   ├── ShoppingCartDto.cs
+        │       │   ├── CreateShoppingCartRequestDto.cs
+        │       │   └── ShoppingCartItem/
+        │       │       ├── ShoppingCartItemDto.cs
+        │       │       ├── CreateShoppingCartItemRequestDto.cs
+        │       │       └── UpdateShoppingCartItemRequestDto.cs
+        │       └── Transaction/
+        │           └── TransactionDto.cs
+        ├── Repositories/
+        │   ├── Interface/                       # Repository interfaces (13)
+        │   │   ├── IAddressRepository.cs
+        │   │   ├── IAuditLogRepository.cs
+        │   │   ├── ICategoryRepository.cs
+        │   │   ├── IImageRepository.cs
+        │   │   ├── IOrderRepository.cs
+        │   │   ├── IPaymentRepository.cs
+        │   │   ├── IProductRepository.cs
+        │   │   ├── IRatingRepository.cs
+        │   │   ├── IShippingRepository.cs
+        │   │   ├── IShoppingCartItemRepository.cs
+        │   │   ├── IShoppingCartRepository.cs
+        │   │   ├── IStockRepository.cs
+        │   │   └── ITokenRepository.cs
+        │   └── Implementation/                  # Repository implementations (13)
+        │       ├── AddressRepository.cs
+        │       ├── AuditLogRepository.cs
+        │       ├── CategoryRepository.cs
+        │       ├── ImageRepository.cs
+        │       ├── OrderRepository.cs
+        │       ├── PaymentRepository.cs
+        │       ├── ProductRepository.cs
+        │       ├── RatingRepository.cs
+        │       ├── ShippingRepository.cs
+        │       ├── ShoppingCartItemRepository.cs
+        │       ├── ShoppingCartRepository.cs
+        │       ├── StockRepository.cs
+        │       └── TokenRepository.cs
+        └── Services/
+            ├── Interface/                       # Service interfaces (10)
+            │   ├── IAddressService.cs
+            │   ├── IAuditLogService.cs
+            │   ├── ICategoryService.cs
+            │   ├── IImageService.cs
+            │   ├── IOrderService.cs
+            │   ├── IPaymentService.cs
+            │   ├── IProductService.cs
+            │   ├── IRatingService.cs
+            │   ├── IShippingService.cs
+            │   ├── IShoppingCartItemService.cs
+            │   ├── IShoppingCartService.cs
+            │   └── IStockService.cs
+            └── Implementation/                  # Service implementations (10)
+                ├── AddressService.cs
+                ├── AuditLogService.cs
+                ├── CategoryService.cs
+                ├── ImageService.cs
+                ├── OrderService.cs
+                ├── PaymentService.cs
+                ├── ProductService.cs
+                ├── RatingService.cs
+                ├── ShippingService.cs
+                ├── ShoppingCartItemService.cs
+                ├── ShoppingCartService.cs
+                └── StockService.cs
 ```
 
 ---
@@ -239,32 +289,36 @@ public class Product : BaseEntity
 ```
 
 ### DTOs (`Models/DTO/`)
-- Organized in subfolders by domain (Auth, Category, Product, Order, ShoppingCart, Image)
+- Organized in subfolders by domain (Auth, Category, Product, Order, ShoppingCart, Image, Payment, Shipping, Address, AuditLog, Transaction)
 - Nested DTOs in sub-subfolders (e.g., `Product/Rating/`, `Product/Stock/`, `Order/OrderItem/`)
 - Naming convention: `<Entity>Dto`, `Create<Entity>RequestDto`, `Update<Entity>RequestDto`
 - Use same data annotations as domain models for validation
 - Do NOT include navigation properties or audit fields (CreatedAt, UpdatedAt) unless needed for response
+- Enum fields in DTOs should be `string` type (e.g., `Status: "Pending"`)
 
 ### Controllers (`Controllers/`)
 - Inherit from `ControllerBase` with `[ApiController]` attribute
 - Route template: `[Route("api/[controller]")]`
-- Constructor injection: `private readonly IRepository repository;` with `this.repository = repository;`
+- Constructor injection: `private readonly IService service;` with `this.service = service;`
+- Controllers inject **services**, NOT repositories
 - Action methods are `public async Task<IActionResult>`
 - Named routes: `[HttpPost("ActionName", Name = "ActionName")]`
 - Explicit response types: `[ProducesResponseType(StatusCodes.Status200OK)]`
 - Role-based authorization: `[Authorize(Roles = "Admin,Vendor")]`
 - Get current user ID: `User.FindFirstValue(ClaimTypes.NameIdentifier)`
+- Catch `KeyNotFoundException` → `NotFound()`, `InvalidOperationException` → `BadRequest()`
 - Return patterns:
-  - Create: `return Created("", mapper.Map<EntityDto>(entity));`
-  - Read: `return Ok(mapper.Map<EntityDto>(entity));`
+  - Create: `return Created("", dto);`
+  - Read: `return Ok(dto);`
   - Not found: `return NotFound();`
   - Unauthorized: `return Unauthorized();`
-  - Bad request: `return BadRequest("Message");`
+  - Bad request: `return BadRequest(ex.Message);`
 
 ```csharp
 [HttpPost("Add", Name = "AddProduct")]
 [ProducesResponseType(StatusCodes.Status201Created)]
 [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status404NotFound)]
 [Authorize(Roles = "Admin,Vendor")]
 public async Task<IActionResult> AddProduct([FromBody] CreateProductRequestDto request)
 {
@@ -272,17 +326,71 @@ public async Task<IActionResult> AddProduct([FromBody] CreateProductRequestDto r
     if (vendorId == null)
         return Unauthorized();
 
-    var product = new Product
+    try
     {
-        Name = request.Name,
-        Description = request.Description,
-        ImageID = request.ImageID,
-        VendorId = vendorId,
-        CategoryId = request.CategoryId,
-    };
+        var product = await productService.CreateAsync(request, vendorId);
+        return Created("", product);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(ex.Message);
+    }
+}
+```
 
-    await productRepository.CreateAsync(product);
-    return Created("", mapper.Map<ProductDto>(product));
+### Services (`Services/`)
+
+**Interface pattern** (`Services/Interface/`):
+```csharp
+public interface IProductService
+{
+    Task<ProductDto> CreateAsync(CreateProductRequestDto request, string vendorId);
+    Task<IEnumerable<ProductDto>> GetAllAsync();
+    Task<ProductDto?> GetByIdAsync(Guid id);
+    Task<ProductDto?> UpdateAsync(Guid id, CreateProductRequestDto request, string vendorId, bool isAdmin);
+    Task<ProductDto?> DeleteAsync(Guid id, string vendorId, bool isAdmin);
+}
+```
+
+**Implementation pattern** (`Services/Implementation/`):
+- Inject repositories and `IMapper` via constructor
+- Validate business rules before delegating to repositories
+- Use `IMapper` for all DTO mapping (NOT manual mapping)
+- Throw `KeyNotFoundException` for not-found scenarios
+- Throw `InvalidOperationException` for business rule violations
+- Return `null` for soft failures (e.g., update on non-existent entity)
+
+```csharp
+public class ProductService : IProductService
+{
+    private readonly IProductRepository productRepository;
+    private readonly ICategoryRepository categoryRepository;
+    private readonly IMapper mapper;
+
+    public ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, IMapper mapper)
+    {
+        this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
+        this.mapper = mapper;
+    }
+
+    public async Task<ProductDto> CreateAsync(CreateProductRequestDto request, string vendorId)
+    {
+        var category = await categoryRepository.GetByID(request.CategoryId);
+        if (category == null)
+            throw new KeyNotFoundException($"Category with ID {request.CategoryId} not found.");
+
+        var product = new Product
+        {
+            Name = request.Name,
+            Description = request.Description,
+            VendorId = vendorId,
+            CategoryId = request.CategoryId,
+        };
+
+        await productRepository.CreateAsync(product);
+        return mapper.Map<ProductDto>(product);
+    }
 }
 ```
 
@@ -337,6 +445,7 @@ public class ProductRepository : IProductRepository
 - Bidirectional maps: `CreateMap<Entity, EntityDto>().ReverseMap();`
 - Create-only maps: `CreateMap<CreateEntityRequestDto, Entity>();`
 - Update maps (for `mapper.Map(source, destination)`): `CreateMap<UpdateEntityRequestDto, Entity>();`
+- Enum-to-string conversion: `.ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()))`
 - Register in `Program.cs`: `builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));`
 
 ### DbContext (`Data/EcommerceDBContext.cs`)
@@ -463,8 +572,8 @@ dotnet user-secrets clear
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/Stocks/Add` | Admin,Vendor | Create stock variant |
-| GET | `/api/Stocks/{productID}` | None | Get stocks by product |
-| GET | `/api/Stocks/GetByID/{stockID}` | None | Get stock by ID |
+| GET | `/api/Stocks/{productID}` | Admin,Vendor | Get stocks by product |
+| GET | `/api/Stocks/GetByID/{stockID}` | Admin,Vendor | Get stock by ID |
 | PUT | `/api/Stocks/{stockID}` | Admin,Vendor | Update stock |
 | DELETE | `/api/Stocks/{stockID}` | Admin,Vendor | Delete stock |
 
@@ -473,24 +582,24 @@ dotnet user-secrets clear
 |--------|-------|------|-------------|
 | POST | `/api/ShoppingCarts/Add` | Customer | Create cart |
 | GET | `/api/ShoppingCarts/GetByCustomerID` | Customer | Get own cart |
-| GET | `/api/ShoppingCarts` | None | Get cart by ID |
+| GET | `/api/ShoppingCarts/{shoppingCartID}` | Admin,Customer | Get cart by ID |
 | DELETE | `/api/ShoppingCarts` | Customer | Delete own cart |
 
 ### Cart Items (`/api/ShoppingCartItems`)
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/ShoppingCartItems/Add` | Customer | Add item to cart |
-| GET | `/api/ShoppingCartItems` | None | Get item by ID |
-| GET | `/api/ShoppingCartItems/{id}` | None | Get items by cart ID |
-| PUT | `/api/ShoppingCartItems` | Customer | Update item quantity |
-| DELETE | `/api/ShoppingCartItems` | Customer | Remove item from cart |
+| GET | `/api/ShoppingCartItems/GetByID` | Admin,Customer | Get item by ID |
+| GET | `/api/ShoppingCartItems/{cartID}` | Admin,Customer | Get items by cart ID |
+| PUT | `/api/ShoppingCartItems/{ID}` | Customer | Update item quantity |
+| DELETE | `/api/ShoppingCartItems/{ID}` | Admin,Customer | Remove item from cart |
 
 ### Ratings (`/api/Ratings`)
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/Ratings/Add` | Admin,Vendor,Customer | Add rating |
-| GET | `/api/Ratings` | Admin,Vendor,Customer | Get own rating for product |
-| GET | `/api/Ratings/{productID}` | None | Get all ratings for product |
+| GET | `/api/Ratings/MyRating` | Admin,Vendor,Customer | Get own rating for product |
+| GET | `/api/Ratings/{productID}` | Admin,Vendor,Customer | Get all ratings for product |
 | PUT | `/api/Ratings/{productId}` | Admin,Vendor,Customer | Update own rating |
 | DELETE | `/api/Ratings/{productId}` | Admin,Vendor,Customer | Delete own rating |
 
@@ -503,19 +612,65 @@ dotnet user-secrets clear
 | PUT | `/api/Orders/{orderId}` | Admin | Update order status |
 | DELETE | `/api/Orders/{orderId}` | Customer | Delete order |
 
+### Payments (`/api/Payments`)
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/Payments` | Admin,Customer | Create payment for order |
+| GET | `/api/Payments/{id}` | Admin,Customer | Get payment by ID |
+| GET | `/api/Payments/Order/{orderId}` | Admin,Customer | Get payment by order ID |
+| GET | `/api/Payments` | Admin | List all payments |
+| GET | `/api/Payments/Status/{status}` | Admin | Filter payments by status |
+| PUT | `/api/Payments/{paymentId}/Status` | Admin | Update payment status |
+| DELETE | `/api/Payments/{id}` | Admin | Delete payment |
+
+### Transactions (`/api/Transactions`)
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/Transactions/{paymentId}` | Admin | Add transaction to payment |
+| GET | `/api/Transactions/{paymentId}` | Admin | Get transactions by payment ID |
+
+### Shipping (`/api/Shippings`)
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/Shippings` | Admin | Create shipping for order |
+| GET | `/api/Shippings/{id}` | Admin,Customer | Get shipping by ID |
+| GET | `/api/Shippings/Order/{orderId}` | Admin,Customer | Get shipping by order ID |
+| GET | `/api/Shippings/Tracking/{trackingNumber}` | None | Track shipment by number |
+| GET | `/api/Shippings` | Admin | List all shipments |
+| GET | `/api/Shippings/Status/{status}` | Admin | Filter shipments by status |
+| PUT | `/api/Shippings/{id}` | Admin | Update shipping details |
+| PUT | `/api/Shippings/{shippingId}/Status` | Admin | Update shipping status |
+| DELETE | `/api/Shippings/{id}` | Admin | Delete shipping |
+
+### Addresses (`/api/Addresses`)
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| POST | `/api/Addresses` | Admin,Vendor,Customer | Create address |
+| GET | `/api/Addresses` | Admin,Vendor,Customer | Get all addresses for current user |
+| GET | `/api/Addresses/{id}` | Admin,Vendor,Customer | Get address by ID |
+| GET | `/api/Addresses/Default` | Admin,Vendor,Customer | Get default address |
+| PUT | `/api/Addresses/{id}` | Admin,Vendor,Customer | Update address |
+| PUT | `/api/Addresses/{id}/SetDefault` | Admin,Vendor,Customer | Set as default address |
+| DELETE | `/api/Addresses/{id}` | Admin,Vendor,Customer | Delete address |
+
 ### Images (`/api/Images`)
 | Method | Route | Auth | Description |
 |--------|-------|------|-------------|
 | POST | `/api/Images` | Admin,Vendor,Customer | Upload image file |
 | GET | `/api/Images` | Admin | List all images |
-| GET | `/api/Images/{id}` | None | Get image by ID |
-| DELETE | `/api/Images/{id}` | None | Delete image |
+| GET | `/api/Images/{id}` | Admin,Vendor,Customer | Get image by ID |
+| DELETE | `/api/Images/{id}` | Admin,Vendor,Customer | Delete image |
 
-### Repositories Without Controllers (not yet exposed via API)
-- **Address** — `IAddressRepository` (CRUD + SetDefault)
-- **Payment** — `IPaymentRepository` (CRUD + UpdateStatus)
-- **Shipping** — `IShippingRepository` (CRUD + UpdateStatus)
-- **AuditLog** — `IAuditLogRepository` (CRUD + Query by entity/user/action/date)
+### Audit Logs (`/api/AuditLogs`)
+| Method | Route | Auth | Description |
+|--------|-------|------|-------------|
+| GET | `/api/AuditLogs` | Admin | List all audit logs |
+| GET | `/api/AuditLogs/{id}` | Admin | Get log by ID |
+| GET | `/api/AuditLogs/Entity/{type}` | Admin | Filter by entity type |
+| GET | `/api/AuditLogs/User` | Admin | Filter by user ID |
+| GET | `/api/AuditLogs/Action/{action}` | Admin | Filter by action |
+| GET | `/api/AuditLogs/DateRange` | Admin | Filter by date range |
+| DELETE | `/api/AuditLogs/{id}` | Admin | Delete audit log |
 
 ---
 
@@ -562,48 +717,58 @@ dotnet user-secrets clear
 
 ## Common Tasks for AI Agents
 
-### How to Add a New Controller
+### How to Add a New Service
 
 1. **Create the DTOs** in `Models/DTO/<EntityName>/`:
    - `<EntityName>Dto.cs` (response)
    - `Create<EntityName>RequestDto.cs` (create request)
    - `Update<EntityName>RequestDto.cs` (update request, optional)
 
-2. **Create the domain model** in `Models/Domain/<EntityName>.cs`:
-   - Inherit from `BaseEntity`
-   - Add data annotations (`[Required]`, `[MaxLength]`, `[Range]`)
-   - Add navigation properties
+2. **Create the service interface** in `Services/Interface/I<EntityName>Service.cs`:
+   - Define methods that return DTOs, NOT domain entities
+   - Use `Task<T?>` for operations that may return null
+   - Include `string userId` parameter where ownership matters
 
-3. **Add DbSet to DbContext** in `Data/EcommerceDBContext.cs`:
+3. **Create the service implementation** in `Services/Implementation/<EntityName>Service.cs`:
+   - Inject repositories and `IMapper`
+   - Validate business rules before calling repositories
+   - Throw `KeyNotFoundException` for not-found scenarios
+   - Throw `InvalidOperationException` for business rule violations
+   - Use `mapper.Map<TDto>(entity)` for all mapping
+
+4. **Add AutoMapper mappings** in `Mappings/AutoMapperProfiles.cs`:
    ```csharp
-   public DbSet<EntityName> EntityNames { get; set; }
-   ```
-
-4. **Configure relationships** in `OnModelCreating` in `EcommerceDBContext.cs`
-
-5. **Create the repository interface** in `Repositories/Interface/I<EntityName>Repository.cs`
-
-6. **Create the repository implementation** in `Repositories/Implementation/<EntityName>Repository.cs`
-
-7. **Register the repository** in `Program.cs`:
-   ```csharp
-   builder.Services.AddScoped<I<EntityName>Repository, <EntityName>Repository>();
-   ```
-
-8. **Add AutoMapper mappings** in `Mappings/AutoMapperProfiles.cs`:
-   ```csharp
-   CreateMap<EntityName, EntityNameDto>().ReverseMap();
+   CreateMap<EntityName, EntityNameDto>()
+       .ForMember(d => d.EnumField, opt => opt.MapFrom(s => s.EnumField.ToString()));
    CreateMap<CreateEntityNameRequestDto, EntityName>();
-   CreateMap<UpdateEntityNameRequestDto, EntityName>(); // if applicable
+   CreateMap<UpdateEntityNameRequestDto, EntityName>();
    ```
 
-9. **Create the controller** in `Controllers/<EntityName>Controller.cs`:
-   - Follow the existing controller conventions (see Code Conventions section)
-   - Inject repository and IMapper via constructor
-   - Add `[ProducesResponseType]` attributes
-   - Add `[Authorize(Roles = "...")]` where appropriate
+5. **Create the controller** in `Controllers/<EntityName>Controller.cs`:
+   - Inject the service (NOT the repository)
+   - Extract `userId` from JWT claims where needed
+   - Catch `KeyNotFoundException` → `NotFound()`
+   - Catch `InvalidOperationException` → `BadRequest()`
 
-10. **Create and apply migration**:
+6. **Register the service** in `Program.cs`:
+   ```csharp
+   builder.Services.AddScoped<I<EntityName>Service, <EntityName>Service>();
+   ```
+
+### How to Add a New Controller
+
+1. **Create the DTOs** in `Models/DTO/<EntityName>/`
+2. **Create the domain model** in `Models/Domain/<EntityName>.cs` (if not exists)
+3. **Add DbSet to DbContext** in `Data/EcommerceDBContext.cs`
+4. **Configure relationships** in `OnModelCreating`
+5. **Create the repository interface** in `Repositories/Interface/I<EntityName>Repository.cs`
+6. **Create the repository implementation** in `Repositories/Implementation/<EntityName>Repository.cs`
+7. **Create the service interface** in `Services/Interface/I<EntityName>Service.cs`
+8. **Create the service implementation** in `Services/Implementation/<EntityName>Service.cs`
+9. **Add AutoMapper mappings** in `Mappings/AutoMapperProfiles.cs`
+10. **Create the controller** in `Controllers/<EntityName>Controller.cs`
+11. **Register repository and service** in `Program.cs`
+12. **Create and apply migration**:
     ```bash
     dotnet ef migrations add Add<EntityName>
     dotnet ef database update
@@ -628,7 +793,7 @@ dotnet ef database update
 1. Create file in appropriate subfolder under `Models/DTO/`
 2. Add `using System.ComponentModel.DataAnnotations;` if using validation attributes
 3. Match property names to domain model (for AutoMapper compatibility)
-4. Add same validation attributes as domain model
+4. Use `string` type for enum fields in response DTOs
 
 ### How to Add AutoMapper Mapping
 
@@ -638,6 +803,9 @@ dotnet ef database update
    CreateMap<Source, Destination>().ReverseMap(); // bidirectional
    CreateMap<CreateRequestDto, Entity>();          // create only
    CreateMap<UpdateRequestDto, Entity>();          // update (maps onto existing entity)
+   // For enum-to-string conversion:
+   CreateMap<Entity, EntityDto>()
+       .ForMember(d => d.Status, opt => opt.MapFrom(s => s.Status.ToString()));
    ```
 
 ### How to Add Role-Based Authorization
@@ -659,6 +827,9 @@ var email = User.FindFirstValue(ClaimTypes.Email);
 
 // Get user roles
 var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+
+// Check if admin
+var isAdmin = User.IsInRole("Admin");
 ```
 
 ### How to Handle File Uploads
@@ -672,7 +843,7 @@ Follow the pattern in `ImagesController.cs` and `ImageRepository.cs`:
 
 Follow the pattern in `ShoppingCartItemRepository.cs`:
 ```csharp
-using var transaction = await dbContext.Database.BeginTransactionAsync();
+await using var transaction = await dbContext.Database.BeginTransactionAsync();
 try
 {
     // ... operations
@@ -697,9 +868,10 @@ Services are registered in `Program.cs` in this order:
 4. `AddSwaggerGen()` — Swagger with JWT security definition
 5. `AddDbContext<EcommerceDBContext>()` — EF Core with SQL Server
 6. `AddScoped<...Repository, ...Repository>()` — All repositories (13 total)
-7. `AddAutoMapper(typeof(AutoMapperProfiles))` — AutoMapper
-8. `AddIdentityCore<IdentityUser>()` — Identity with custom password policy
-9. `AddAuthentication(JwtBearerDefaults.AuthenticationScheme)` — JWT validation
+7. `AddScoped<...Service, ...Service>()` — All services (10 total)
+8. `AddAutoMapper(typeof(AutoMapperProfiles))` — AutoMapper
+9. `AddIdentityCore<IdentityUser>()` — Identity with custom password policy
+10. `AddAuthentication(JwtBearerDefaults.AuthenticationScheme)` — JWT validation
 
 Middleware pipeline order:
 1. `UseSwagger()` / `UseSwaggerUI()` (Development only)

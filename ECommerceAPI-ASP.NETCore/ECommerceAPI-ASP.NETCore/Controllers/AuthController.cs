@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
 {
@@ -21,14 +22,10 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             this.userManager = userManager;
             this.tokenRepository = tokenRepository;
         }
-        /// <summary>
-        /// jofnjwenfnwjenfnwefwejnfijewn
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+
         [HttpPost]
         [Route("Register")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
         {
@@ -40,18 +37,21 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
             var identityResult = await userManager.CreateAsync(identityUser, request.Password);
             if (identityResult.Succeeded)
             {
-                if (request.Roles is not null && request.Roles.Any())
-                    identityResult = await userManager.AddToRolesAsync(identityUser, request.Roles);
+                identityResult = await userManager.AddToRoleAsync(identityUser, "Customer");
                 if (identityResult.Succeeded)
                 {
-                    return Ok("User Registered Successfully, pls Login");
+                    return Created("", "User Registered Successfully, pls Login");
                 }
             }
-            return BadRequest("Something Went Wrong!!");
+            return BadRequest("Registration failed. Please check your input and try again.");
         }
 
         [HttpPost]
         [Route("Login")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
+        [EnableRateLimiting("Login")]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
             var user = await userManager.FindByEmailAsync(request.email);
@@ -73,7 +73,7 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
                 }
             }
-            return BadRequest("Username Or Password Incorrect!!");
+            return Unauthorized("Invalid email or password.");
         }
         [HttpDelete("DeleteAccount")]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
