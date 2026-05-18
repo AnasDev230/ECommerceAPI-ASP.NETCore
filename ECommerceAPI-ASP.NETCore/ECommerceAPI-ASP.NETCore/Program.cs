@@ -14,42 +14,51 @@ using Microsoft.OpenApi.Models;
 using ECommerceAPI_ASP.NETCore.Services.Implementation;
 using ECommerceAPI_ASP.NETCore.Services.Interface;
 using System.Threading.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
+
+#region Core Services
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddEndpointsApiExplorer();
+
+#endregion
+
+#region Swagger
+
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "E-Commerce API" ,Version="v1"});
-    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme,new OpenApiSecurityScheme
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "E-Commerce API", Version = "v1" });
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
     {
-        Name="Authorization",
-        In=ParameterLocation.Header,
-        Type=SecuritySchemeType.ApiKey, 
-        Scheme=JwtBearerDefaults.AuthenticationScheme
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = JwtBearerDefaults.AuthenticationScheme
     });
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference=new OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type=ReferenceType.SecurityScheme,
-                    Id=JwtBearerDefaults.AuthenticationScheme
+                    Type = ReferenceType.SecurityScheme,
+                    Id = JwtBearerDefaults.AuthenticationScheme
                 },
-                Scheme="Oauth2",
-                Name=JwtBearerDefaults.AuthenticationScheme,
-                In=ParameterLocation.Header
+                Scheme = "Oauth2",
+                Name = JwtBearerDefaults.AuthenticationScheme,
+                In = ParameterLocation.Header
             },
             new List<string>()
-            {
-
-            }
         }
     });
 });
+
+#endregion
+
+#region CORS
 
 builder.Services.AddCors(options =>
 {
@@ -61,6 +70,10 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+#endregion
+
+#region Rate Limiting
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -87,20 +100,35 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 });
 
-builder.Services.AddDbContext<EcommerceDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("EcommerceConnectionString")));
+#endregion
+
+#region Database
+
+builder.Services.AddDbContext<EcommerceDBContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("EcommerceConnectionString")));
+
+#endregion
+
+#region Repositories
+
 builder.Services.AddScoped<ITokenRepository, TokenRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
-builder.Services.AddScoped<IProductRepository,ProductRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IStockRepository, StockRepository>();
 builder.Services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
 builder.Services.AddScoped<IShoppingCartItemRepository, ShoppingCartItemRepository>();
 builder.Services.AddScoped<IRatingRepository, RatingRepository>();
-builder.Services.AddScoped<IOrderRepository,OrderRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IImageRepository, ImageRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IShippingRepository, ShippingRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+
+#endregion
+
+#region Services
+
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IImageService, ImageService>();
@@ -113,11 +141,23 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IShippingService, ShippingService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+
+#endregion
+
+#region AutoMapper
+
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
-builder.Services.AddIdentityCore<IdentityUser>().AddRoles<IdentityRole>()
+
+#endregion
+
+#region Identity & Authentication
+
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
     .AddTokenProvider<DataProtectorTokenProvider<IdentityUser>>("Ecommerce")
     .AddEntityFrameworkStores<EcommerceDBContext>()
     .AddDefaultTokenProviders();
+
 builder.Services.Configure<IdentityOptions>(options =>
 {
     options.Password.RequireDigit = true;
@@ -131,21 +171,23 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Lockout.AllowedForNewUsers = true;
 });
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
-{
-    ValidateIssuer = true,
-    ValidateAudience = true,
-    ValidateLifetime = true,
-    ValidateIssuerSigningKey = true,
-    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-    ValidAudience = builder.Configuration["Jwt:Audience"],
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-});
+    });
 
-
-
+#endregion
 
 var app = builder.Build();
+
+#region Middleware Pipeline
 
 app.UseMiddleware<GlobalExceptionHandler>();
 
@@ -168,5 +210,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapControllers();
+
+#endregion
 
 app.Run();
