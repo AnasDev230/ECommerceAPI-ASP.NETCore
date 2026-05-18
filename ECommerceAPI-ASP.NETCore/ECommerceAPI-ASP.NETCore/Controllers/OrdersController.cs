@@ -1,12 +1,8 @@
 ﻿using System.Security.Claims;
-using AutoMapper;
-using ECommerceAPI_ASP.NETCore.Models.DTO.Order.OrderItem;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Order;
-using ECommerceAPI_ASP.NETCore.Repositories.Interface;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using ECommerceAPI_ASP.NETCore.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using ECommerceAPI_ASP.NETCore.Models.Domain;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
 {
@@ -14,16 +10,17 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
     [ApiController]
     public class OrdersController : ControllerBase
     {
-        private readonly IOrderRepository orderRepository;
-        private readonly IMapper mapper;
+        private readonly IOrderService orderService;
 
-        public OrdersController(IOrderRepository orderRepository,IMapper mapper)
+        public OrdersController(IOrderService orderService)
         {
-            this.orderRepository = orderRepository;
-            this.mapper = mapper;
+            this.orderService = orderService;
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> CreateOrder()
         {
@@ -33,95 +30,77 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
 
             try
             {
-
-                var order=await orderRepository.CreateOrderFromCartAsync(customerId);
-                var response = new OrderDto
-                {
-                    Id = order.Id,
-                    CustomerId = order.CustomerId,
-                    CreatedAt = order.CreatedAt,
-                    TotalAmount=order.TotalAmount,
-                    Status = order.Status,
-                    Items = order.Items.Select(i => new OrderItemDto
-                    {
-                        Id = i.Id,
-                        StockId = i.StockId,
-                        Quantity = i.Quantity,
-                        UnitPrice = i.UnitPrice,
-                        TotalPrice = i.TotalPrice,
-                        
-                    }).ToList()
-
-                };
-
-                return Ok(response);
-
-
-
+                var order = await orderService.CreateFromCartAsync(customerId);
+                return Ok(order);
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new { message = ex.Message });
             }
-
-
         }
 
-
         [HttpGet("{orderID}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> GetOrderByID([FromRoute] Guid orderID)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
-            var order=await orderRepository.GetOrderByIdAsync(orderID);
-            if(order == null)
+
+            var order = await orderService.GetByIdAndCustomerAsync(orderID, customerId);
+            if (order == null)
                 return NotFound();
-            return Ok(mapper.Map<OrderDto>(order));
+            return Ok(order);
         }
+
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAllOrders()
         {
-            var orders = await orderRepository.GetAllOrdersAsync();
-            return Ok(mapper.Map<List<OrderDto>>(orders));
+            var orders = await orderService.GetAllAsync();
+            return Ok(orders);
         }
 
         [HttpPut("{orderId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateOrderStatus([FromRoute] Guid orderId, [FromBody] UpdateOrderStatusRequestDto request)
         {
-            var order = await orderRepository.GetOrderByIdAsync(orderId);
-            if (order == null)
-                return NotFound();
-if(request.Status is OrderStatus.Pending or OrderStatus.Paid or OrderStatus.Processing or OrderStatus.Shipped or OrderStatus.Delivered or OrderStatus.Cancelled)
+            try
             {
-                var updated = await orderRepository.UpdateOrderStatusAsync(orderId, request.Status);
-                if (!updated)
-                    return BadRequest("Order status cannot be updated.");
-                var updatedOrder = await orderRepository.GetOrderByIdAsync(orderId);
-                return Ok(mapper.Map<OrderDto>(updatedOrder));
+                var order = await orderService.UpdateStatusAsync(orderId, request);
+                if (order == null)
+                    return NotFound();
+                return Ok(order);
             }
-
-            return BadRequest("Incorrect Status!!");
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("{orderId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Customer")]
         public async Task<IActionResult> DeleteOrder([FromRoute] Guid orderId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
-            var order = await orderRepository.GetOrderByIdAsync(orderId);
-            if (order == null)
+
+            var deleted = await orderService.DeleteAsync(orderId, customerId);
+            if (!deleted)
                 return NotFound();
-
-            if(await orderRepository.DeleteOrderAsync(orderId))
-                return Ok("Order Deleted Successfully");
-            return BadRequest();
-
+            return Ok("Order Deleted Successfully");
         }
     }
 }
