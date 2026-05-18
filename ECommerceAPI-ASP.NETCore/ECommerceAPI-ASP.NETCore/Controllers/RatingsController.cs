@@ -1,11 +1,7 @@
 ﻿using System.Security.Claims;
-using AutoMapper;
-using Azure.Core;
-using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Rating;
-using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+using ECommerceAPI_ASP.NETCore.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
@@ -14,92 +10,106 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
     [ApiController]
     public class RatingsController : ControllerBase
     {
-        private readonly IRatingRepository ratingRepository;
-        private readonly IMapper mapper;
-        public RatingsController(IRatingRepository ratingRepository, IMapper mapper)
+        private readonly IRatingService ratingService;
+
+        public RatingsController(IRatingService ratingService)
         {
-            this.ratingRepository = ratingRepository;
-            this.mapper = mapper;
+            this.ratingService = ratingService;
         }
+
         [HttpPost("Add", Name = "AddRating")]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> AddRating([FromBody] CreateRatingRequestDto request)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
-            var existing = await ratingRepository.GetRatingAsync(request.ProductId, customerId);
-            if (existing != null)
-                return BadRequest("You have already rated this product.");
-            var rating = new Rating
+
+            try
             {
-                ProductId = request.ProductId,
-                CustomerId = customerId,
-                Stars = request.Stars,
-                Comment = request.Comment,
-                CreatedAt = DateTime.Now,
-            };
-            await ratingRepository.AddRatingAsync(rating);
-            return Created("", mapper.Map<RatingDto>(rating));
+                var rating = await ratingService.CreateAsync(customerId, request);
+                return Created("", rating);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
-        [HttpGet]
+
+        [HttpGet("MyRating")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
-        public async Task<IActionResult> GetMyRating([FromBody] GetMyRatingRequestDto request)
+        public async Task<IActionResult> GetMyRating([FromQuery] Guid productId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
-            var rating = await ratingRepository.GetRatingAsync(request.ProductId, customerId);
+
+            var rating = await ratingService.GetByCustomerAndProductAsync(customerId, productId);
             if (rating == null)
                 return NotFound("You have not rated this product yet.");
-            return Ok(mapper.Map<RatingDto>(rating));
-
+            return Ok(rating);
         }
 
         [HttpGet("{productID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetRatingsByProduct([FromRoute] Guid productID)
         {
-            var ratings = ratingRepository.GetRatingsByProductAsync(productID);
-            return Ok(mapper.Map<List<RatingDto>>(ratings));
+            try
+            {
+                var ratings = await ratingService.GetByProductIdAsync(productID);
+                return Ok(ratings);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpPut("{productId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
-        public async Task<IActionResult> UpdateRating([FromRoute] Guid productId,[FromBody] UpdateRatingRequestDto request)
+        public async Task<IActionResult> UpdateRating([FromRoute] Guid productId, [FromBody] UpdateRatingRequestDto request)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
-            var rating=await ratingRepository.GetRatingAsync(productId, customerId);
+
+            var rating = await ratingService.UpdateAsync(customerId, productId, request);
             if (rating == null)
                 return NotFound();
-            mapper.Map(request,rating);
-            var updated = await ratingRepository.UpdateRatingAsync(rating);
-            if (!updated)
-                return NotFound();
-            var updatedRating = await ratingRepository.GetRatingAsync(productId, customerId);
-            return Ok(mapper.Map<RatingDto>(updatedRating));
+            return Ok(rating);
         }
 
         [HttpDelete("{productId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> DeleteRating([FromRoute] Guid productId)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
-            var rating = await ratingRepository.GetRatingAsync(productId, customerId);
+
+            var rating = await ratingService.DeleteAsync(customerId, productId);
             if (rating == null)
                 return NotFound();
-           await ratingRepository.DeleteRatingAsync(rating.Id);
-            return Ok(mapper.Map<RatingDto>(rating));
+            return Ok(rating);
         }
-
-
     }
 }
