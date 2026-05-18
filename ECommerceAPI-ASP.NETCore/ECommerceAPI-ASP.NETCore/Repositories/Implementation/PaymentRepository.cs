@@ -100,5 +100,20 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
 
             return rows > 0;
         }
+
+        public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
+        {
+            await dbContext.Transactions.AddAsync(transaction);
+            await dbContext.SaveChangesAsync();
+            return transaction;
+        }
+
+        public async Task<IEnumerable<Transaction>> GetTransactionsByPaymentIdAsync(Guid paymentId)
+        {
+            return await dbContext.Transactions
+                .AsNoTracking()
+                .Where(t => t.PaymentId == paymentId)
+                .ToListAsync();
+        }
     }
 }
