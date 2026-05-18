@@ -23,7 +23,7 @@ namespace ECommerceAPI_ASP.NETCore.Mappings
             CreateMap<Product,ProductDto>().ReverseMap();
             CreateMap<CreateProductRequestDto, Product>();
 
-            CreateMap<Stock,StockDto>().ReverseMap();   
+            CreateMap<Stock, StockDto>().ReverseMap();
             CreateMap<CreateStockRequestDto, Stock>();
             CreateMap<UpdateStockRequestDto, Stock>();
 

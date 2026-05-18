@@ -1,11 +1,6 @@
-﻿using AutoMapper;
-using Azure.Core;
-using ECommerceAPI_ASP.NETCore.Models.Domain;
-using ECommerceAPI_ASP.NETCore.Models.DTO.Product;
-using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock;
-using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+﻿using ECommerceAPI_ASP.NETCore.Models.DTO.Product.Stock;
+using ECommerceAPI_ASP.NETCore.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
@@ -14,84 +9,94 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
     [ApiController]
     public class StocksController : ControllerBase
     {
-        private readonly IStockRepository stockRepository;
-        private readonly IMapper mapper;
-        private readonly IProductRepository productRepository;
+        private readonly IStockService stockService;
 
-        public StocksController(IStockRepository stockRepository,IMapper mapper,IProductRepository productRepository)
+        public StocksController(IStockService stockService)
         {
-            this.stockRepository = stockRepository;
-            this.mapper = mapper;
-            this.productRepository = productRepository;
+            this.stockService = stockService;
         }
+
         [HttpPost("Add", Name = "AddStock")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> AddStock([FromBody] CreateStockRequestDto request)
         {
-            var product=await productRepository.GetByID(request.ProductId);
-            if (product==null)
-                return NotFound("Product Not Found!!");
-            
-            var stock = mapper.Map<Stock>(request);
-            await stockRepository.CreateAsync(stock);
-            return Created("",mapper.Map<StockDto>(stock));
+            try
+            {
+                var stock = await stockService.CreateAsync(request);
+                return Created("", stock);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpGet("{productID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> GetAllStocksByProductID([FromRoute] Guid productID)
         {
-            var product = await productRepository.GetByID(productID);
-            if (product == null)
-                return NotFound("Product Not Found!!");
-            var stock=await stockRepository.GetAllByProductIdAsync(productID);
-            return Ok(mapper.Map<List<StockDto>>(stock));
-
+            try
+            {
+                var stocks = await stockService.GetByProductIdAsync(productID);
+                return Ok(stocks);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
+
         [HttpGet("GetByID/{StockID}", Name = "GetStockByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> GetByID([FromRoute] Guid StockID)
         {
-            var stock=await stockRepository.GetByID(StockID);
+            var stock = await stockService.GetByIdAsync(StockID);
             if (stock == null)
                 return NotFound();
-            return Ok(mapper.Map<StockDto>(stock));
+            return Ok(stock);
         }
+
         [HttpPut("{StockID:Guid}", Name = "EditStock")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Vendor")]
-        public async Task<IActionResult> UpdateStock([FromRoute] Guid StockID,[FromBody] UpdateStockRequestDto request)
+        public async Task<IActionResult> UpdateStock([FromRoute] Guid StockID, [FromBody] UpdateStockRequestDto request)
         {
-            var stock = await stockRepository.GetByID(StockID);
+            var stock = await stockService.UpdateAsync(StockID, request);
             if (stock == null)
                 return NotFound();
-            stock=mapper.Map(request,stock);
-            var updated = await stockRepository.UpdateAsync(stock);
-            if (!updated)
-                return NotFound();
-            var updatedStock = await stockRepository.GetByID(StockID);
-            return Ok(mapper.Map<StockDto>(updatedStock));
+            return Ok(stock);
         }
-        [HttpDelete]
-        [Route("{StockID:Guid}")]
+
+        [HttpDelete("{StockID:Guid}", Name = "DeleteStock")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin,Vendor")]
         public async Task<IActionResult> DeleteStock([FromRoute] Guid StockID)
         {
-            var stock = await stockRepository.GetByID(StockID);
-            if (stock == null)
-                return NotFound();
-            var deleted = await stockRepository.DeleteAsync(StockID);
-            if (!deleted)
-                return NotFound();
-            return Ok("Stock deleted successfully");
+            try
+            {
+                var deleted = await stockService.DeleteAsync(StockID);
+                if (!deleted)
+                    return NotFound();
+                return Ok("Stock deleted successfully");
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

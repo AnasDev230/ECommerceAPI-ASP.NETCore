@@ -1,11 +1,7 @@
 ﻿using System.Security.Claims;
-using AutoMapper;
-using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.ShoppingCart.ShoppingCartItem;
-using ECommerceAPI_ASP.NETCore.Repositories.Implementation;
-using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+using ECommerceAPI_ASP.NETCore.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
@@ -14,102 +10,87 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
     [ApiController]
     public class ShoppingCartItemsController : ControllerBase
     {
-        private readonly IShoppingCartItemRepository shoppingCartItemRepository;
-        private readonly IMapper mapper;
-        private readonly IShoppingCartRepository shoppingCartRepository;
-        public ShoppingCartItemsController(IShoppingCartItemRepository shoppingCartItemRepository,IMapper mapper,IShoppingCartRepository shoppingCartRepository)
+        private readonly IShoppingCartItemService shoppingCartItemService;
+
+        public ShoppingCartItemsController(IShoppingCartItemService shoppingCartItemService)
         {
-            this.shoppingCartItemRepository = shoppingCartItemRepository;
-            this.mapper = mapper;
-            this.shoppingCartRepository = shoppingCartRepository;
+            this.shoppingCartItemService = shoppingCartItemService;
         }
+
         [HttpPost("Add", Name = "AddItem")]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        [Authorize(Roles ="Customer")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [Authorize(Roles = "Customer")]
         public async Task<IActionResult> AddCartItem([FromBody] CreateShoppingCartItemRequestDto request)
         {
             var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (customerId == null)
                 return Unauthorized();
 
-            var shoppingCart = await shoppingCartRepository.GetCartByCustomerIdAsync(customerId);
-            if (shoppingCart == null)
+            try
             {
-                shoppingCart = new ShoppingCart
-                {
-                    Id = Guid.NewGuid(),
-                    CustomerId = customerId,
-                    CreatedAt = DateTime.UtcNow
-                };
-                await shoppingCartRepository.CreateAsync(shoppingCart);
+                var item = await shoppingCartItemService.AddToCartAsync(customerId, request);
+                return Created("", item);
             }
-
-            var item = new ShoppingCartItem
+            catch (InvalidOperationException ex)
             {
-                Id = Guid.NewGuid(),
-                ShoppingCartId = shoppingCart.Id,
-                StockId = request.StockId,
-                Quantity = request.Quantity
-            };
-            await shoppingCartItemRepository.CreateAsync(item);
-
-            return Created("", mapper.Map<ShoppingCartItemDto>(item));
-
-
-
+                return BadRequest(ex.Message);
+            }
         }
 
-        [HttpGet]
+        [HttpGet("GetByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Customer")]
-        public async Task<IActionResult> GetItemByID(Guid ID)
+        public async Task<IActionResult> GetItemByID([FromQuery] Guid ID)
         {
-            var item=shoppingCartItemRepository.GetItemsByCartIdAsync(ID);
-            if(item == null)
+            var item = await shoppingCartItemService.GetByIdAsync(ID);
+            if (item == null)
                 return NotFound();
-            return Ok(mapper.Map<ShoppingCartItemDto>(item));
+            return Ok(item);
         }
+
         [HttpGet("{ID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Customer")]
         public async Task<IActionResult> GetItemsByCartIdAsync([FromRoute] Guid ID)
         {
-            var items = shoppingCartItemRepository.GetItemsByCartIdAsync(ID);
-            if(items == null)
-                return NotFound();
-            return Ok(mapper.Map<List<ShoppingCartItemDto>>(items));
+            var items = await shoppingCartItemService.GetByCartIdAsync(ID);
+            return Ok(items);
         }
-        [HttpPut]
+
+        [HttpPut("{ID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> UpdateItem(Guid ID,[FromBody] UpdateShoppingCartItemRequestDto request)
+        public async Task<IActionResult> UpdateItem([FromRoute] Guid ID, [FromBody] UpdateShoppingCartItemRequestDto request)
         {
-            var item = await shoppingCartItemRepository.GetByIdAsync(ID);
-            if(item == null)
-                return NotFound();
-            if (request.Quantity < 1)
-                return BadRequest("Quantity must be at least 1.");
-            var updated = await shoppingCartItemRepository.UpdateQuantityAsync(item.Id,request.Quantity);
-            if (!updated)
-                return NotFound();
-            var updatedItem = await shoppingCartItemRepository.GetByIdAsync(ID);
-            return Ok(mapper.Map<ShoppingCartItemDto>(updatedItem));
+            try
+            {
+                var item = await shoppingCartItemService.UpdateQuantityAsync(ID, request);
+                if (item == null)
+                    return NotFound();
+                return Ok(item);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
-        [HttpDelete]
+
+        [HttpDelete("{ID}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin,Customer")]
-        public async Task<IActionResult> DeleteItem(Guid ID)
+        public async Task<IActionResult> DeleteItem([FromRoute] Guid ID)
         {
-            var item = await shoppingCartItemRepository.GetByIdAsync(ID);
+            var item = await shoppingCartItemService.DeleteAsync(ID);
             if (item == null)
                 return NotFound();
-            await shoppingCartItemRepository.DeleteAsync(item.Id);
-            return Ok(mapper.Map<ShoppingCartItemDto>(item));
+            return Ok(item);
         }
     }
 }
