@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerceAPI_ASP.NETCore.Models.DTO.AuditLog;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
 using ECommerceAPI_ASP.NETCore.Services.Interface;
@@ -7,10 +8,12 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
     public class AuditLogService : IAuditLogService
     {
         private readonly IAuditLogRepository auditLogRepository;
+        private readonly IMapper mapper;
 
-        public AuditLogService(IAuditLogRepository auditLogRepository)
+        public AuditLogService(IAuditLogRepository auditLogRepository, IMapper mapper)
         {
             this.auditLogRepository = auditLogRepository;
+            this.mapper = mapper;
         }
 
         public async Task<AuditLogDto?> GetByIdAsync(Guid id)
@@ -19,60 +22,42 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (auditLog == null)
                 return null;
 
-            return MapToDto(auditLog);
+            return mapper.Map<AuditLogDto>(auditLog);
         }
 
         public async Task<IEnumerable<AuditLogDto>> GetAllAsync()
         {
             var auditLogs = await auditLogRepository.GetAllAsync();
-            return auditLogs.Select(MapToDto);
+            return mapper.Map<IEnumerable<AuditLogDto>>(auditLogs);
         }
 
         public async Task<IEnumerable<AuditLogDto>> GetByEntityAsync(string entityType, Guid? entityId = null)
         {
             var auditLogs = await auditLogRepository.GetByEntityAsync(entityType, entityId);
-            return auditLogs.Select(MapToDto);
+            return mapper.Map<IEnumerable<AuditLogDto>>(auditLogs);
         }
 
         public async Task<IEnumerable<AuditLogDto>> GetByUserIdAsync(string userId)
         {
             var auditLogs = await auditLogRepository.GetByUserIdAsync(userId);
-            return auditLogs.Select(MapToDto);
+            return mapper.Map<IEnumerable<AuditLogDto>>(auditLogs);
         }
 
         public async Task<IEnumerable<AuditLogDto>> GetByActionAsync(string action)
         {
             var auditLogs = await auditLogRepository.GetByActionAsync(action);
-            return auditLogs.Select(MapToDto);
+            return mapper.Map<IEnumerable<AuditLogDto>>(auditLogs);
         }
 
         public async Task<IEnumerable<AuditLogDto>> GetByDateRangeAsync(DateTime start, DateTime end)
         {
             var auditLogs = await auditLogRepository.GetByDateRangeAsync(start, end);
-            return auditLogs.Select(MapToDto);
+            return mapper.Map<IEnumerable<AuditLogDto>>(auditLogs);
         }
 
         public async Task<bool> DeleteAsync(Guid id)
         {
             return await auditLogRepository.DeleteAsync(id);
-        }
-
-        private static AuditLogDto MapToDto(ECommerceAPI_ASP.NETCore.Models.Domain.AuditLog auditLog)
-        {
-            return new AuditLogDto
-            {
-                Id = auditLog.Id,
-                EntityType = auditLog.EntityType,
-                EntityId = auditLog.EntityId,
-                Action = auditLog.Action,
-                OldValues = auditLog.OldValues,
-                NewValues = auditLog.NewValues,
-                UserId = auditLog.UserId,
-                Description = auditLog.Description,
-                IpAddress = auditLog.IpAddress,
-                UserAgent = auditLog.UserAgent,
-                CreatedAt = auditLog.CreatedAt,
-            };
         }
     }
 }

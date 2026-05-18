@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Address;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
@@ -8,10 +9,12 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
     public class AddressService : IAddressService
     {
         private readonly IAddressRepository addressRepository;
+        private readonly IMapper mapper;
 
-        public AddressService(IAddressRepository addressRepository)
+        public AddressService(IAddressRepository addressRepository, IMapper mapper)
         {
             this.addressRepository = addressRepository;
+            this.mapper = mapper;
         }
 
         public async Task<AddressDto> CreateAsync(string userId, CreateAddressRequestDto request)
@@ -30,13 +33,13 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             };
 
             await addressRepository.CreateAsync(address);
-            return MapToDto(address);
+            return mapper.Map<AddressDto>(address);
         }
 
         public async Task<IEnumerable<AddressDto>> GetAllByUserIdAsync(string userId)
         {
             var addresses = await addressRepository.GetAllByUserIdAsync(userId);
-            return addresses.Select(MapToDto);
+            return mapper.Map<IEnumerable<AddressDto>>(addresses);
         }
 
         public async Task<AddressDto?> GetByIdAsync(Guid id, string userId)
@@ -45,7 +48,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (address == null || address.UserId != userId)
                 return null;
 
-            return MapToDto(address);
+            return mapper.Map<AddressDto>(address);
         }
 
         public async Task<AddressDto?> GetDefaultAsync(string userId)
@@ -54,7 +57,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (address == null)
                 return null;
 
-            return MapToDto(address);
+            return mapper.Map<AddressDto>(address);
         }
 
         public async Task<AddressDto?> UpdateAsync(Guid id, string userId, UpdateAddressRequestDto request)
@@ -76,7 +79,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 return null;
 
             var updatedAddress = await addressRepository.GetByIdAsync(id);
-            return updatedAddress != null ? MapToDto(updatedAddress) : null;
+            return updatedAddress != null ? mapper.Map<AddressDto>(updatedAddress) : null;
         }
 
         public async Task<bool> DeleteAsync(Guid id, string userId)
@@ -95,25 +98,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 return null;
 
             var address = await addressRepository.GetByIdAsync(addressId);
-            return address != null ? MapToDto(address) : null;
-        }
-
-        private static AddressDto MapToDto(Address address)
-        {
-            return new AddressDto
-            {
-                Id = address.Id,
-                UserId = address.UserId,
-                Street = address.Street,
-                City = address.City,
-                State = address.State,
-                PostalCode = address.PostalCode,
-                Country = address.Country,
-                PhoneNumber = address.PhoneNumber,
-                IsDefault = address.IsDefault,
-                AddressType = address.AddressType.ToString(),
-                CreatedAt = address.CreatedAt,
-            };
+            return address != null ? mapper.Map<AddressDto>(address) : null;
         }
     }
 }

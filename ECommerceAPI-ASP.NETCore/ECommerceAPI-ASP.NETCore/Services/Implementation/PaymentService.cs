@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Payment;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Transaction;
@@ -10,11 +11,13 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
     {
         private readonly IPaymentRepository paymentRepository;
         private readonly IOrderRepository orderRepository;
+        private readonly IMapper mapper;
 
-        public PaymentService(IPaymentRepository paymentRepository, IOrderRepository orderRepository)
+        public PaymentService(IPaymentRepository paymentRepository, IOrderRepository orderRepository, IMapper mapper)
         {
             this.paymentRepository = paymentRepository;
             this.orderRepository = orderRepository;
+            this.mapper = mapper;
         }
 
         public async Task<PaymentDto> CreateAsync(CreatePaymentRequestDto request)
@@ -36,7 +39,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             };
 
             await paymentRepository.CreateAsync(payment);
-            return MapToDto(payment);
+            return mapper.Map<PaymentDto>(payment);
         }
 
         public async Task<PaymentDto?> GetByIdAsync(Guid id)
@@ -45,7 +48,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (payment == null)
                 return null;
 
-            return MapToDto(payment);
+            return mapper.Map<PaymentDto>(payment);
         }
 
         public async Task<PaymentDto?> GetByOrderIdAsync(Guid orderId)
@@ -54,13 +57,13 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (payment == null)
                 return null;
 
-            return MapToDto(payment);
+            return mapper.Map<PaymentDto>(payment);
         }
 
         public async Task<IEnumerable<PaymentDto>> GetAllAsync()
         {
             var payments = await paymentRepository.GetAllAsync();
-            return payments.Select(MapToDto);
+            return mapper.Map<IEnumerable<PaymentDto>>(payments);
         }
 
         public async Task<IEnumerable<PaymentDto>> GetByStatusAsync(string status)
@@ -69,7 +72,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 throw new ArgumentException($"Invalid payment status: {status}");
 
             var payments = await paymentRepository.GetByStatusAsync(paymentStatus);
-            return payments.Select(MapToDto);
+            return mapper.Map<IEnumerable<PaymentDto>>(payments);
         }
 
         public async Task<PaymentDto?> UpdateStatusAsync(Guid paymentId, UpdatePaymentStatusRequestDto request)
@@ -86,7 +89,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 return null;
 
             var updatedPayment = await paymentRepository.GetByIdAsync(paymentId);
-            return updatedPayment != null ? MapToDto(updatedPayment) : null;
+            return updatedPayment != null ? mapper.Map<PaymentDto>(updatedPayment) : null;
         }
 
         public async Task<bool> DeleteAsync(Guid id)
@@ -121,7 +124,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             };
 
             await paymentRepository.CreateTransactionAsync(transaction);
-            return MapTransactionToDto(transaction);
+            return mapper.Map<TransactionDto>(transaction);
         }
 
         public async Task<IEnumerable<TransactionDto>> GetTransactionsByPaymentIdAsync(Guid paymentId)
@@ -131,39 +134,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 throw new KeyNotFoundException($"Payment with ID {paymentId} not found.");
 
             var transactions = await paymentRepository.GetTransactionsByPaymentIdAsync(paymentId);
-            return transactions.Select(MapTransactionToDto);
-        }
-
-        private static PaymentDto MapToDto(Payment payment)
-        {
-            return new PaymentDto
-            {
-                Id = payment.Id,
-                OrderId = payment.OrderId,
-                Method = payment.Method.ToString(),
-                Amount = payment.Amount,
-                Status = payment.Status.ToString(),
-                ProcessedAt = payment.ProcessedAt,
-                FailureReason = payment.FailureReason,
-                CreatedAt = payment.CreatedAt,
-            };
-        }
-
-        private static TransactionDto MapTransactionToDto(Transaction transaction)
-        {
-            return new TransactionDto
-            {
-                Id = transaction.Id,
-                PaymentId = transaction.PaymentId,
-                GatewayTransactionId = transaction.GatewayTransactionId,
-                Amount = transaction.Amount,
-                Type = transaction.Type.ToString(),
-                Status = transaction.Status.ToString(),
-                GatewayRawResponse = transaction.GatewayRawResponse,
-                ErrorCode = transaction.ErrorCode,
-                ErrorDescription = transaction.ErrorDescription,
-                CreatedAt = transaction.CreatedAt,
-            };
+            return mapper.Map<IEnumerable<TransactionDto>>(transactions);
         }
     }
 }

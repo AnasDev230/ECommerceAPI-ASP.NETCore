@@ -1,3 +1,4 @@
+using AutoMapper;
 using ECommerceAPI_ASP.NETCore.Models.Domain;
 using ECommerceAPI_ASP.NETCore.Models.DTO.Shipping;
 using ECommerceAPI_ASP.NETCore.Repositories.Interface;
@@ -9,11 +10,13 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
     {
         private readonly IShippingRepository shippingRepository;
         private readonly IOrderRepository orderRepository;
+        private readonly IMapper mapper;
 
-        public ShippingService(IShippingRepository shippingRepository, IOrderRepository orderRepository)
+        public ShippingService(IShippingRepository shippingRepository, IOrderRepository orderRepository, IMapper mapper)
         {
             this.shippingRepository = shippingRepository;
             this.orderRepository = orderRepository;
+            this.mapper = mapper;
         }
 
         public async Task<ShippingDto> CreateAsync(CreateShippingRequestDto request)
@@ -38,7 +41,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             };
 
             await shippingRepository.CreateAsync(shipping);
-            return MapToDto(shipping);
+            return mapper.Map<ShippingDto>(shipping);
         }
 
         public async Task<ShippingDto?> GetByIdAsync(Guid id)
@@ -47,7 +50,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (shipping == null)
                 return null;
 
-            return MapToDto(shipping);
+            return mapper.Map<ShippingDto>(shipping);
         }
 
         public async Task<ShippingDto?> GetByOrderIdAsync(Guid orderId)
@@ -56,7 +59,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (shipping == null)
                 return null;
 
-            return MapToDto(shipping);
+            return mapper.Map<ShippingDto>(shipping);
         }
 
         public async Task<ShippingDto?> GetByTrackingNumberAsync(string trackingNumber)
@@ -65,13 +68,13 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
             if (shipping == null)
                 return null;
 
-            return MapToDto(shipping);
+            return mapper.Map<ShippingDto>(shipping);
         }
 
         public async Task<IEnumerable<ShippingDto>> GetAllAsync()
         {
             var shippings = await shippingRepository.GetAllAsync();
-            return shippings.Select(MapToDto);
+            return mapper.Map<IEnumerable<ShippingDto>>(shippings);
         }
 
         public async Task<IEnumerable<ShippingDto>> GetByStatusAsync(string status)
@@ -80,7 +83,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 throw new ArgumentException($"Invalid shipping status: {status}");
 
             var shippings = await shippingRepository.GetByStatusAsync(shippingStatus);
-            return shippings.Select(MapToDto);
+            return mapper.Map<IEnumerable<ShippingDto>>(shippings);
         }
 
         public async Task<ShippingDto?> UpdateAsync(Guid id, UpdateShippingRequestDto request)
@@ -101,7 +104,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 return null;
 
             var updatedShipping = await shippingRepository.GetByIdAsync(id);
-            return updatedShipping != null ? MapToDto(updatedShipping) : null;
+            return updatedShipping != null ? mapper.Map<ShippingDto>(updatedShipping) : null;
         }
 
         public async Task<ShippingDto?> UpdateStatusAsync(Guid shippingId, UpdateShippingStatusRequestDto request)
@@ -118,7 +121,7 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 return null;
 
             var updatedShipping = await shippingRepository.GetByIdAsync(shippingId);
-            return updatedShipping != null ? MapToDto(updatedShipping) : null;
+            return updatedShipping != null ? mapper.Map<ShippingDto>(updatedShipping) : null;
         }
 
         public async Task<bool> DeleteAsync(Guid id)
@@ -131,23 +134,6 @@ namespace ECommerceAPI_ASP.NETCore.Services.Implementation
                 throw new InvalidOperationException("Cannot delete shipping that is in transit, out for delivery, or delivered.");
 
             return await shippingRepository.DeleteAsync(id);
-        }
-
-        private static ShippingDto MapToDto(Shipping shipping)
-        {
-            return new ShippingDto
-            {
-                Id = shipping.Id,
-                OrderId = shipping.OrderId,
-                Carrier = shipping.Carrier,
-                TrackingNumber = shipping.TrackingNumber,
-                EstimatedDelivery = shipping.EstimatedDelivery,
-                ActualDelivery = shipping.ActualDelivery,
-                Status = shipping.Status.ToString(),
-                Notes = shipping.Notes,
-                ShippingAddressId = shipping.ShippingAddressId,
-                CreatedAt = shipping.CreatedAt,
-            };
         }
     }
 }
