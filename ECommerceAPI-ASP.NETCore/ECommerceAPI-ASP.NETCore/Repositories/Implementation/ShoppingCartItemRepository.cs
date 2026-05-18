@@ -72,8 +72,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         {
             return await dbContext.ShoppingCartItems
                 .AsNoTracking()
-                .Include(x => x.Stock)
-                .ThenInclude(s => s.Product)
+                .Include(x => x.Stock!)
+                .ThenInclude(s => s.Product!)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
@@ -81,8 +81,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
         {
             return await dbContext.ShoppingCartItems
                 .AsNoTracking()
-                .Include(x => x.Stock)
-                .ThenInclude(s => s.Product)
+                .Include(x => x.Stock!)
+                .ThenInclude(s => s.Product!)
                 .Where(x => x.ShoppingCartId == cartId)
                 .ToListAsync();
         }

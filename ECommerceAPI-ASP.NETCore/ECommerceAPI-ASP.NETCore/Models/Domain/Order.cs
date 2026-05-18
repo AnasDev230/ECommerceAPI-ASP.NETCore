@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace ECommerceAPI_ASP.NETCore.Models.Domain
@@ -22,6 +23,7 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
         public DateTime? CompletedAt { get; set; }
 
         [Range(0, 999999.99)]
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal TotalAmount { get; set; }
 
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
@@ -31,6 +33,14 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
 
         public Guid? BillingAddressId { get; set; }
         public Address? BillingAddress { get; set; }
+
+        [Required]
+        [MaxLength(500)]
+        public string BillingAddressSnapshot { get; set; } = string.Empty;
+
+        [Required]
+        [MaxLength(500)]
+        public string ShippingAddressSnapshot { get; set; } = string.Empty;
 
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 

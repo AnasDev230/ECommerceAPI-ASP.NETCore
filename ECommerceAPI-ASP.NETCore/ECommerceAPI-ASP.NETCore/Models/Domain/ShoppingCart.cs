@@ -8,9 +8,6 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
         [Required]
         public string CustomerId { get; set; } = string.Empty;
         public IdentityUser? Customer { get; set; }
-
-        public new DateTime? UpdatedAt { get; set; }
-
         public ICollection<ShoppingCartItem> Items { get; set; } = new List<ShoppingCartItem>();
     }
 }

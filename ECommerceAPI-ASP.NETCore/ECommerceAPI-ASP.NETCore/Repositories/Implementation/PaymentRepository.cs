@@ -70,8 +70,6 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(p => p.Method, payment.Method)
                     .SetProperty(p => p.Amount, payment.Amount)
-                    .SetProperty(p => p.TransactionId, payment.TransactionId)
-                    .SetProperty(p => p.TransactionDetails, payment.TransactionDetails)
                     .SetProperty(p => p.Status, payment.Status)
                     .SetProperty(p => p.ProcessedAt, payment.ProcessedAt)
                     .SetProperty(p => p.FailureReason, payment.FailureReason)

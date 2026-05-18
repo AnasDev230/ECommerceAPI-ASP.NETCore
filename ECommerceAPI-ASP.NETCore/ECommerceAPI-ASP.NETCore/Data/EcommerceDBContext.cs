@@ -25,6 +25,7 @@ public DbSet<Category> Categories { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Shipping> Shippings { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
 
 protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,15 +50,7 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
                 .HasIndex(p => p.VendorId);
 
             modelBuilder.Entity<Product>()
-                .HasIndex(p => p.SKU)
-                .IsUnique()
-                .HasFilter("[SKU] IS NOT NULL");
-
-            modelBuilder.Entity<Product>()
                 .HasIndex(p => p.IsActive);
-
-            modelBuilder.Entity<Product>()
-                .HasIndex(p => p.BasePrice);
 
             modelBuilder.Entity<Stock>()
                 .HasOne(s => s.Product)
@@ -183,9 +176,6 @@ modelBuilder.Entity<Image>()
             modelBuilder.Entity<Payment>()
                 .HasIndex(p => p.Status);
 
-            modelBuilder.Entity<Payment>()
-                .HasIndex(p => p.TransactionId);
-
             modelBuilder.Entity<Shipping>()
                 .HasOne(s => s.Order)
                 .WithOne(o => o.Shipping)
@@ -231,6 +221,23 @@ modelBuilder.Entity<Image>()
                 .WithMany()
                 .HasForeignKey(o => o.BillingAddressId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Payment)
+                .WithMany(p => p.Transactions)
+                .HasForeignKey(t => t.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => t.PaymentId);
+
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => t.GatewayTransactionId)
+                .IsUnique()
+                .HasFilter("[GatewayTransactionId] IS NOT NULL");
+
+            modelBuilder.Entity<Transaction>()
+                .HasIndex(t => t.Status);
         }
     }
 }

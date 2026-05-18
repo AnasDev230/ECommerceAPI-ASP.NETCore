@@ -1,9 +1,6 @@
-﻿using AutoMapper;
-using ECommerceAPI_ASP.NETCore.Models.Domain;
-using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
-using ECommerceAPI_ASP.NETCore.Repositories.Interface;
+﻿using ECommerceAPI_ASP.NETCore.Models.DTO.Category;
+using ECommerceAPI_ASP.NETCore.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceAPI_ASP.NETCore.Controllers
@@ -12,72 +9,65 @@ namespace ECommerceAPI_ASP.NETCore.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly ICategoryRepository categoryRepository;
-        private readonly IMapper mapper;
+        private readonly ICategoryService categoryService;
 
-        public CategoriesController(ICategoryRepository categoryRepository,IMapper mapper)
+        public CategoriesController(ICategoryService categoryService)
         {
-            this.categoryRepository = categoryRepository;
-            this.mapper = mapper;
+            this.categoryService = categoryService;
         }
+
         [HttpPost("Add", Name = "AddCategory")]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddCategory([FromBody] CreateCategoryRequestDto request)
         {
-            var category = mapper.Map<Category>(request);
-            await categoryRepository.CreateAsync(category);
-            return Created("", mapper.Map<CategoryDto>(category));
+            var category = await categoryService.CreateAsync(request);
+            return Created("", category);
         }
+
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        //[Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetAllCategories()
         {
-            var categories = await categoryRepository.GetAllAsync();
-            return Ok(mapper.Map<List<CategoryDto>>(categories));
+            var categories = await categoryService.GetAllAsync();
+            return Ok(categories);
         }
+
         [HttpGet("GetByID/{ID}", Name = "GetCategoryByID")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        //[Authorize(Roles = "Admin,Vendor,Customer")]
         public async Task<IActionResult> GetCategoryByID([FromRoute] Guid ID)
         {
-            Category category = await categoryRepository.GetByID(ID);
-           if(category == null)
+            var category = await categoryService.GetByIdAsync(ID);
+            if (category == null)
                 return NotFound();
-           return Ok(mapper.Map<CategoryDto>(category));
+            return Ok(category);
         }
 
         [HttpPut("{ID:Guid}", Name = "EditCategory")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> EditCategory([FromRoute] Guid ID, CreateCategoryRequestDto updateCategoryRequestDto)
+        public async Task<IActionResult> EditCategory([FromRoute] Guid ID, [FromBody] CreateCategoryRequestDto request)
         {
-            var category= await categoryRepository.GetByID(ID);
-            if(category==null)
+            var category = await categoryService.UpdateAsync(ID, request);
+            if (category == null)
                 return NotFound();
-            mapper.Map(updateCategoryRequestDto, category);
-            var updated = await categoryRepository.UpdateAsync(category);
-            if (!updated)
-                return NotFound();
-            var updatedCategory = await categoryRepository.GetByID(ID);
-            return Ok(mapper.Map<CategoryDto>(updatedCategory));
+            return Ok(category);
         }
 
-        [HttpDelete]
-        [Route("{ID:Guid}")]
+        [HttpDelete("{ID:Guid}", Name = "DeleteCategory")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteCategory([FromRoute] Guid ID)
         {
-            var category = await categoryRepository.GetByID(ID);
+            var category = await categoryService.DeleteAsync(ID);
             if (category == null)
                 return NotFound();
-            category=await categoryRepository.DeleteAsync(ID);
-            return Ok(mapper.Map<CategoryDto>(category));
+            return Ok(category);
         }
     }
 }

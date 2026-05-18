@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ECommerceAPI_ASP.NETCore.Models.Domain
 {
@@ -12,14 +13,22 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
         public Guid StockId { get; set; }
         public Stock? Stock { get; set; }
 
+        [Required]
+        [MaxLength(200)]
+        public string ProductNameSnapshot { get; set; } = string.Empty;
+
+        [MaxLength(150)]
+        public string? VariantDetailsSnapshot { get; set; }
+
         [Range(1, int.MaxValue)]
         public int Quantity { get; set; }
 
         [Range(0, 999999.99)]
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal UnitPrice { get; set; }
 
-        [Range(0, 999999.99)]
-        public decimal TotalPrice { get; set; }
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal TotalPrice => Quantity * UnitPrice;
 
         [MaxLength(500)]
         public string? Notes { get; set; }

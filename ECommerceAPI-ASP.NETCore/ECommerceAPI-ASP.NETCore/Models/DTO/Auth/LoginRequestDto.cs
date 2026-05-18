@@ -6,9 +6,9 @@ namespace ECommerceAPI_ASP.NETCore.Models.DTO.Auth
     {
         [Required]
         [DataType(DataType.EmailAddress)]
-        public string email { get; set; }
+        public string email { get; set; } = string.Empty;
         [Required]
         [DataType(DataType.Password)]
-        public string Password { get; set; }
+        public string Password { get; set; } = string.Empty;
     }
 }

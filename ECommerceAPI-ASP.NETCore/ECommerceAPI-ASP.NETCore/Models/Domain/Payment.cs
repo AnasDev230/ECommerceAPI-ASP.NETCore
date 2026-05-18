@@ -1,4 +1,5 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ECommerceAPI_ASP.NETCore.Models.Domain
 {
@@ -11,13 +12,8 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
         public PaymentMethod Method { get; set; } = PaymentMethod.CreditCard;
 
         [Range(0, 999999.99)]
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal Amount { get; set; }
-
-        [MaxLength(100)]
-        public string? TransactionId { get; set; }
-
-        [MaxLength(500)]
-        public string? TransactionDetails { get; set; }
 
         public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
 
@@ -25,6 +21,8 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
 
         [MaxLength(500)]
         public string? FailureReason { get; set; }
+
+        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
     }
 
     public enum PaymentMethod

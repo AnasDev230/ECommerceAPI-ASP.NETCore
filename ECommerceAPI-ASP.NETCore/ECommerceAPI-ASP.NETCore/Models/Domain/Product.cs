@@ -16,16 +16,7 @@ namespace ECommerceAPI_ASP.NETCore.Models.Domain
         public string? DescriptionPlainText { get; set; }
 
         [MaxLength(100)]
-        public string? SKU { get; set; }
-
-        [MaxLength(100)]
         public string? Brand { get; set; }
-
-        [Range(0, 999999.99)]
-        public decimal BasePrice { get; set; }
-
-        [Range(0, 999999.99)]
-        public decimal? SalePrice { get; set; }
 
         public bool IsActive { get; set; } = true;
 

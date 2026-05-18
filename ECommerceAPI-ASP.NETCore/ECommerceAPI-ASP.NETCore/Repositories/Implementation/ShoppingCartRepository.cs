@@ -40,8 +40,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return await dbContext.ShoppingCarts
                 .AsNoTracking()
                 .Include(x => x.Items)
-                .ThenInclude(i => i.Stock)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(i => i.Stock!)
+                .ThenInclude(s => s.Product!)
                 .FirstOrDefaultAsync(x => x.CustomerId == customerId);
         }
 
@@ -50,8 +50,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             return await dbContext.ShoppingCarts
                 .AsNoTracking()
                 .Include(x => x.Items)
-                .ThenInclude(i => i.Stock)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(i => i.Stock!)
+                .ThenInclude(s => s.Product!)
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
@@ -60,8 +60,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             var cart = await dbContext.ShoppingCarts
                 .AsNoTracking()
                 .Include(x => x.Items)
-                .ThenInclude(i => i.Stock)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(i => i.Stock!)
+                .ThenInclude(s => s.Product!)
                 .FirstOrDefaultAsync(x => x.CustomerId == customerId);
 
             if (cart != null)

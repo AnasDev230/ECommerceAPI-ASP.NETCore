@@ -6,25 +6,16 @@ namespace ECommerceAPI_ASP.NETCore.Models.DTO.Product
     {
         [Required]
         [MaxLength(200)]
-        public string Name { get; set; }
+        public string Name { get; set; } = string.Empty;
 
         [MaxLength(5000)]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [MaxLength(8000)]
         public string? DescriptionPlainText { get; set; }
 
         [MaxLength(100)]
-        public string? SKU { get; set; }
-
-        [MaxLength(100)]
         public string? Brand { get; set; }
-
-        [Range(0, 999999.99)]
-        public decimal BasePrice { get; set; }
-
-        [Range(0, 999999.99)]
-        public decimal? SalePrice { get; set; }
 
         public bool IsActive { get; set; } = true;
 

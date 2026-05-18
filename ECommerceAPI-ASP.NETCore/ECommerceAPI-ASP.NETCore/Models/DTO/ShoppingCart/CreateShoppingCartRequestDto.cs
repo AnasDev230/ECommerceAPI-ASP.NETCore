@@ -2,6 +2,6 @@
 {
     public class CreateShoppingCartRequestDto
     {
-        public string CustomerId { get; set; }
+        public string CustomerId { get; set; } = string.Empty;
     }
 }

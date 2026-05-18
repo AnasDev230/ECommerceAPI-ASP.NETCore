@@ -21,8 +21,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
             {
                 var cart = await dbContext.ShoppingCarts
                     .Include(c => c.Items)
-                    .ThenInclude(i => i.Stock)
-                    .ThenInclude(s => s.Product)
+                    .ThenInclude(i => i.Stock!)
+                    .ThenInclude(s => s.Product!)
                     .FirstOrDefaultAsync(c => c.CustomerId == customerId);
 
                 if (cart == null || !cart.Items.Any())
@@ -49,7 +49,6 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                         Quantity = cartItem.Quantity,
                         UnitPrice = cartItem.Stock.Price,
                     };
-                    orderItem.TotalPrice = orderItem.Quantity * orderItem.UnitPrice;
                     order.Items.Add(orderItem);
                     order.TotalAmount += orderItem.TotalPrice;
 
@@ -120,8 +119,8 @@ namespace ECommerceAPI_ASP.NETCore.Repositories.Implementation
                 .AsNoTracking()
                 .AsSplitQuery()
                 .Include(o => o.Items)
-                .ThenInclude(oi => oi.Stock)
-                .ThenInclude(s => s.Product)
+                .ThenInclude(oi => oi.Stock!)
+                .ThenInclude(s => s.Product!)
                 .Include(o => o.Payment)
                 .Include(o => o.Shipping)
                 .Include(o => o.BillingAddress)
